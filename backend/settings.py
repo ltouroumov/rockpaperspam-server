@@ -11,6 +11,7 @@ DEBUG = os.environ.get("DEBUG", False)
 
 # Application definition
 INSTALLED_APPS = (
+    'api',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -18,7 +19,8 @@ INSTALLED_APPS = (
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'channels',
-    'chat',
+    'backend',
+    'rest_framework'
 )
 
 MIDDLEWARE_CLASSES = (
@@ -32,7 +34,7 @@ MIDDLEWARE_CLASSES = (
     'django.middleware.security.SecurityMiddleware',
 )
 
-ROOT_URLCONF = 'chat.urls'
+ROOT_URLCONF = 'backend.urls'
 
 TEMPLATES = (
     {
@@ -55,7 +57,7 @@ TEMPLATES = (
 # https://docs.djangoproject.com/en/1.9/ref/settings/#databases
 
 DATABASES = {
-    'default': dj_database_url.config(default="postgres:///channels-example", conn_max_age=500)
+    'default': dj_database_url.config(default="postgres:///rps-cnc", conn_max_age=500)
 }
 
 AUTH_PASSWORD_VALIDATORS = (
@@ -105,7 +107,7 @@ CHANNEL_LAYERS = {
         "CONFIG": {
             "hosts": [os.environ.get('REDIS_URL', 'redis://localhost:6379')],
         },
-        "ROUTING": "chat.routing.channel_routing",
+        "ROUTING": "backend.routing.channel_routing",
     },
 }
 
@@ -124,7 +126,7 @@ LOGGING = {
             'propagate': True,
             'level': 'INFO'
         },
-        'chat': {
+        'backend': {
             'handlers': ['console'],
             'propagate': False,
             'level': 'DEBUG',

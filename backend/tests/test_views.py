@@ -1,12 +1,12 @@
 # Use django.test.TestCase here so I get the snazzy Django assertions.
 
 from django.test import TestCase
-from chat.models import Room, Message
+from backend.models import Room, Message
 
 class ViewTests(TestCase):
     def test_about(self):
         r = self.client.get('/')
-        self.assertTemplateUsed(r, 'chat/about.html')
+        self.assertTemplateUsed(r, 'backend/about.html')
 
     def test_new_room(self):
         r = self.client.get('/new/')
@@ -16,5 +16,5 @@ class ViewTests(TestCase):
     def test_chat_room(self):
         room = Room.objects.create(label='room1')
         r = self.client.get('/room1/')
-        self.assertTemplateUsed(r, 'chat/room.html')
+        self.assertTemplateUsed(r, 'backend/room.html')
         assert r.context['room'] == room

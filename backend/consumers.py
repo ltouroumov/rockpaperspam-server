@@ -10,12 +10,12 @@ log = logging.getLogger(__name__)
 @channel_session
 def ws_connect(message):
     # Extract the room from the message. This expects message.path to be of the
-    # form /chat/{label}/, and finds a Room if the message path is applicable,
+    # form /backend/{label}/, and finds a Room if the message path is applicable,
     # and if the Room exists. Otherwise, bails (meaning this is a some othersort
     # of websocket). So, this is effectively a version of _get_object_or_404.
     try:
         prefix, label = message['path'].decode('ascii').strip('/').split('/')
-        if prefix != 'chat':
+        if prefix != 'backend':
             log.debug('invalid ws path=%s', message['path'])
             return
         room = Room.objects.get(label=label)
@@ -26,12 +26,12 @@ def ws_connect(message):
         log.debug('ws room does not exist label=%s', label)
         return
 
-    log.debug('chat connect room=%s client=%s:%s', 
+    log.debug('backend connect room=%s client=%s:%s',
         room.label, message['client'][0], message['client'][1])
     
     # Need to be explicit about the channel layer so that testability works
     # This may be a FIXME?
-    Group('chat-'+label, channel_layer=message.channel_layer).add(message.reply_channel)
+    Group('backend-'+label, channel_layer=message.channel_layer).add(message.reply_channel)
 
     message.channel_session['room'] = room.label
 
@@ -48,7 +48,7 @@ def ws_receive(message):
         log.debug('recieved message, buy room does not exist label=%s', label)
         return
 
-    # Parse out a chat message from the content text, bailing if it doesn't
+    # Parse out a backend message from the content text, bailing if it doesn't
     # conform to the expected message format.
     try:
         data = json.loads(message['text'])
@@ -61,18 +61,18 @@ def ws_receive(message):
         return
 
     if data:
-        log.debug('chat message room=%s handle=%s message=%s', 
+        log.debug('backend message room=%s handle=%s message=%s',
             room.label, data['handle'], data['message'])
         m = room.messages.create(**data)
 
         # See above for the note about Group
-        Group('chat-'+label, channel_layer=message.channel_layer).send({'text': json.dumps(m.as_dict())})
+        Group('backend-'+label, channel_layer=message.channel_layer).send({'text': json.dumps(m.as_dict())})
 
 @channel_session
 def ws_disconnect(message):
     try:
         label = message.channel_session['room']
         room = Room.objects.get(label=label)
-        Group('chat-'+label, channel_layer=message.channel_layer).discard(message.reply_channel)
+        Group('backend-'+label, channel_layer=message.channel_layer).discard(message.reply_channel)
     except (KeyError, Room.DoesNotExist):
         pass
