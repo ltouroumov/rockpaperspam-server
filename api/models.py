@@ -19,7 +19,7 @@ class Contact(models.Model):
     display_name = models.CharField(max_length=1024)
 
     def __str__(self):
-        return str.format("Contact({0.contact_id}/{0.contact_key}, {0.display_name})", self)
+        return str.format("Contact({0.id}, {0.contact_id}/{0.contact_key}, {0.display_name})", self)
 
 
 class Data(models.Model):

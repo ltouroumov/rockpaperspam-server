@@ -35,6 +35,7 @@ MIDDLEWARE_CLASSES = (
 )
 
 ROOT_URLCONF = 'backend.urls'
+LOGIN_URL = '/login'
 
 TEMPLATES = (
     {
