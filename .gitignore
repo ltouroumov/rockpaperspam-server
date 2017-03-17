@@ -5,3 +5,4 @@ htmlcov/
 staticfiles/
 venv/
 __pycache__/
+env/
