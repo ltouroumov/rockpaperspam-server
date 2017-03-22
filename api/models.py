@@ -12,11 +12,19 @@ class Client(models.Model):
         return str.format("Client({0.id}):{0.profile})", self)
 
 
+class Sync(models.Model):
+    client = models.ForeignKey(to='Client')
+    date = models.DateTimeField(auto_now=True)
+
+
 class Contact(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     contact_id = models.BigIntegerField(default=0)
     contact_key = models.CharField(max_length=1024, default="0")
     display_name = models.CharField(max_length=1024)
+
+    def data_for_tag(self, tag):
+        return self.data.filter(type=tag)
 
     def __str__(self):
         return str.format("Contact({0.id}, {0.contact_id}/{0.contact_key}, {0.display_name})", self)

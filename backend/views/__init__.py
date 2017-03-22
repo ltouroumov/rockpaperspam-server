@@ -1,7 +1,9 @@
 from django.contrib.auth import authenticate, login
+from django.http import Http404
 from django.http import HttpRequest
 from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
+from api.models import Client
 
 
 def login_view(request: HttpRequest):

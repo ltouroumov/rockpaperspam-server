@@ -60,6 +60,7 @@ def sync(request: Request):
         client.profile_id = profile.id
 
     client.token = data['token']
+    client.sync_set.create()
 
     profile.contact_id = profile_json['id']
     profile.contact_key = profile_json['key']
