@@ -11,4 +11,8 @@ def data(contact: Contact, tag):
 
 @register.filter
 def last_sync(client: Client):
-    return client.sync_set.order_by('-date').first().date
+    last = client.sync_set.order_by('-date').first()
+    if last:
+        return last.date
+    else:
+        return 'Never'
