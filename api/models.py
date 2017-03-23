@@ -1,4 +1,5 @@
 from django.db import models
+from datetime import datetime
 import uuid
 
 
@@ -9,12 +10,15 @@ class Client(models.Model):
     friends = models.ManyToManyField(to='Contact', related_name='friends')
 
     def __str__(self):
-        return str.format("Client({0.id}):{0.profile})", self)
+        return str.format("Client({0.id}):{0.profile}", self)
 
 
 class Sync(models.Model):
     client = models.ForeignKey(to='Client')
-    date = models.DateTimeField(auto_now=True)
+    date = models.DateTimeField(default=datetime.now)
+
+    def __str__(self):
+        return "Sync({0.client_id}, {0.date})".format(self)
 
 
 class Contact(models.Model):

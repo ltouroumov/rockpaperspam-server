@@ -5,10 +5,23 @@
 {% block content %}
     <div class="row">
         <div class="col-lg-12">
-            <h1 class="page-header">{{ client.id }}</h1>
+            <h1 class="page-header">
+                {{ client.profile.display_name }}
+                <small>{{ client.id }}</small>
+            </h1>
         </div>
         <!-- /.col-lg-12 -->
     </div>
+
+    <div class="row row-spaced">
+        <div class="col-xs-12">
+            <div class="btn-group">
+                <a class="btn btn-default" href="{% url 'send_client' client.id %}">Send Notification</a>
+            </div>
+            <div class="clearfix"></div>
+        </div>
+    </div>
+
     <!-- /.row -->
     <div class="row">
         <div class="col-md-4">
@@ -23,6 +36,26 @@
                         <dd>{{ item.value }}</dd>
                     {% endfor %}
                     </dl>
+                </div>
+            </div>
+            <div class="panel panel-default">
+                <div class="panel-heading">
+                    <i class="fa fa-mobile"></i> Notification Key
+                </div>
+                <div class="panel-body">
+                    <div class="input-group">
+                        <!-- Target -->
+                        <input class="form-control" id="firebase-token" value="{{ client.token }}">
+                        <div class="input-group-btn">
+                            <!-- Trigger -->
+                            <button class="btn btn-default btn-copy" data-clipboard-target="#firebase-token">
+                                <i class="fa fa-clipboard"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <div class="panel-footer">
+                    <a class="btn btn-sm btn-default" href="{% url 'send_client' client.id %}">Send Notification</a>
                 </div>
             </div>
         </div>
@@ -61,3 +94,9 @@
         </div>
     </div>
 {% endblock content %}
+
+{% block scripts %}
+<script type="text/javascript">
+    new Clipboard('.btn-copy');
+</script>
+{% endblock %}

@@ -7,3 +7,6 @@ haikunator
 djangorestframework
 markdown
 django-filter
+django-forms-bootstrap
+requests
+

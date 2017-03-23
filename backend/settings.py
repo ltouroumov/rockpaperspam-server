@@ -7,11 +7,11 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 PROJECT_ROOT = os.path.dirname(os.path.abspath(__file__))
 
 SECRET_KEY = os.environ.get("SECRET_KEY", "".join(random.choice(string.printable) for i in range(40)))
+GCM_SERVER_KEY = os.environ.get("GCM_SERVER_KEY", None)
 DEBUG = os.environ.get("DEBUG", False)
 
 # Application definition
 INSTALLED_APPS = (
-    'api',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -20,6 +20,8 @@ INSTALLED_APPS = (
     'django.contrib.staticfiles',
     'channels',
     'backend',
+    'api',
+    'django_forms_bootstrap',
     'rest_framework'
 )
 

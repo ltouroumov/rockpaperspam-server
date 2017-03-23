@@ -10,6 +10,7 @@ daphne==1.0.3
 dj-database-url==0.4.2
 Django==1.10.6
 django-filter==1.0.1
+django-forms-bootstrap==3.0.1
 djangorestframework==3.6.2
 haikunator==2.1.0
 incremental==16.10.1
@@ -19,6 +20,7 @@ packaging==16.8
 psycopg2==2.7.1
 pyparsing==2.2.0
 redis==2.10.5
+requests==2.13.0
 six==1.10.0
 Twisted==17.1.0
 txaio==2.6.1

@@ -1,26 +1,71 @@
-from django.contrib.auth import authenticate, login
-from django.http import Http404
-from django.http import HttpRequest
-from django.shortcuts import render, redirect
-from django.contrib.auth.decorators import login_required
+from django.contrib.auth.mixins import LoginRequiredMixin
+from django.shortcuts import redirect
+from django.views.generic import View, DetailView, ListView
+from django.views.generic.base import TemplateResponseMixin
+from django.views.generic.detail import SingleObjectMixin
+from django import forms
+from django.contrib import messages
 from api.models import Client
+from backend import settings
+from backend.firebase import FirebaseCloudMessaging
+import json
 
 
-@login_required
-def index(request):
-    clients = Client.objects.all()
-    return render(request, "backend/clients/index.html", {
-        'clients': clients
-    })
+class Index(LoginRequiredMixin, ListView):
+    model = Client
+    template_name = "backend/clients/index.html"
 
 
-@login_required
-def show(request, client_id):
-    try:
-        client = Client.objects.get(id=client_id)
-    except:
-        raise Http404("Requested client does not exist")
+class Show(LoginRequiredMixin, DetailView):
+    model = Client
+    template_name = "backend/clients/show.html"
 
-    return render(request, "backend/clients/show.html", {
-        'client': client
-    })
+
+class SendForm(forms.Form):
+    notif_title = forms.CharField(
+        label="Notification Title",
+        required=False)
+
+    notif_body = forms.CharField(
+        label="Notification Body",
+        required=False)
+
+    data = forms.CharField(
+        label="Data Payload",
+        initial="{}",
+        widget=forms.Textarea)
+
+
+class Send(LoginRequiredMixin, SingleObjectMixin, TemplateResponseMixin, View):
+    model = Client
+    template_name = "backend/clients/send.html"
+
+    def get(self, request, *args, **kwargs):
+        self.object = self.get_object()
+        context = self.get_context_data(form=SendForm())
+        return self.render_to_response(context)
+
+    def post(self, request, *args, **kwargs):
+        object = self.get_object()
+
+        form = SendForm(request.POST)
+
+        if form.is_valid():
+            firebase = FirebaseCloudMessaging(server_key=settings.GCM_SERVER_KEY)
+
+            args = {
+                'data': json.loads(form.cleaned_data['data'])
+            }
+
+            if form.cleaned_data['notif_title'] or form.cleaned_data['notif_body']:
+                args['notification'] = {
+                    'title': form.cleaned_data['notif_title'],
+                    'body': form.cleaned_data['notif_body']
+                }
+
+            firebase.send(to=object.token, **args)
+            messages.info(request, "Notification Sent")
+        else:
+            messages.error(request, "Form is not valid")
+
+        return redirect(to='send_client', pk=object.id)

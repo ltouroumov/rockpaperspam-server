@@ -3,3 +3,7 @@
 .table>thead>tr>td, .table>thead>tr>th {
     vertical-align: middle;
 }
+
+div.row-spaced {
+    margin-bottom: 15px;
+}

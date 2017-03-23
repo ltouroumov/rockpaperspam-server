@@ -1,0 +1,11 @@
+{% load bs_alerts %}
+
+{% if messages %}
+<div class="row">
+    <div class="col-xs-12">
+    {% for message in messages %}
+        <div class="alert alert-dismissable {{ message.tags | as_alert }}">{{ message }}</div>
+    {% endfor %}
+    </div>
+</div>
+{% endif %}
