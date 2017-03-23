@@ -10,6 +10,8 @@ from backend import settings
 from backend.firebase import FirebaseCloudMessaging
 import json
 
+from backend.models import Endpoint
+
 
 class Index(LoginRequiredMixin, ListView):
     model = Client
@@ -69,3 +71,42 @@ class Send(LoginRequiredMixin, SingleObjectMixin, TemplateResponseMixin, View):
             messages.error(request, "Form is not valid")
 
         return redirect(to='send_client', pk=object.id)
+
+
+class CloneForm(forms.Form):
+    endpoint = forms.ModelChoiceField(
+        label="Endpoint",
+        required=True,
+        queryset=Endpoint.objects.all())
+
+
+class Clone(LoginRequiredMixin, TemplateResponseMixin, View):
+    template_name = "backend/clients/clone.html"
+
+    def get(self, request, pk, cid, *args, **kwargs):
+        client = Client.objects.get(id=pk)
+        contact = client.friends.get(id=cid)
+
+        return self.render_to_response({
+            'client': client,
+            'contact': contact,
+            'form': CloneForm()
+        })
+
+    def post(self, request, pk, cid, *args, **kwargs):
+        client = Client.objects.get(id=pk)
+        contact = client.friends.get(id=cid)
+
+        form = CloneForm(request.POST)
+        if form.is_valid():
+            messages.success(request, "Contact Cloned")
+
+            # TODO: Send clone notification
+
+            return redirect(to='show_client', pk=pk)
+        else:
+            return self.render_to_response({
+                'client': client,
+                'contact': contact,
+                'form': form
+            })

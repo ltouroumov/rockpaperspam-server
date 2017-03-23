@@ -9,7 +9,7 @@
     <meta name="description" content="">
     <meta name="author" content="">
 
-    <title>{% block title %}RPS Admin{% endblock %}</title>
+    <title>{% block title %}RPS Control{% endblock %}</title>
 
     {% load staticfiles %}
     <link rel="stylesheet" href="{% static 'vendor/bootstrap/css/bootstrap.min.css' %}">
@@ -41,7 +41,7 @@
                     <span class="icon-bar"></span>
                     <span class="icon-bar"></span>
                 </button>
-                <a class="navbar-brand" href="index.html">RPS Admin</a>
+                <a class="navbar-brand" href="{% url 'dashboard' %}">RPS Admin</a>
             </div>
             <!-- /.navbar-header -->
 

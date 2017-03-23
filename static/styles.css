@@ -7,3 +7,7 @@
 div.row-spaced {
     margin-bottom: 15px;
 }
+
+.panel-heading h2 {
+    margin: 0;
+}

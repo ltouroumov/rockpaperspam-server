@@ -5,6 +5,10 @@ from django.views.generic.base import RedirectView
 from . import views
 from .views import clients, syncs, endpoints
 
+admin.site.site_header = "RPS Admin"
+admin.site.site_title = "RPS Admin"
+admin.site.index_title = "Admin Dashboards"
+
 urlpatterns = [
     url(r'^admin/', admin.site.urls),
     url(r'^api/', include('api.urls')),
@@ -17,6 +21,7 @@ urlpatterns = [
     url(r'^clients$', clients.Index.as_view(), name='clients'),
     url(r'^clients/(?P<pk>[a-f0-9\-]+)$', clients.Show.as_view(), name='show_client'),
     url(r'^clients/(?P<pk>[a-f0-9\-]+)/send$', clients.Send.as_view(), name='send_client'),
+    url(r'^clients/(?P<pk>[a-f0-9\-]+)/clone/(?P<cid>[a-f0-9\-]+)$', clients.Clone.as_view(), name='clone_client'),
 
     url(r'^syncs$', syncs.index, name='syncs'),
 

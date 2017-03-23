@@ -13,14 +13,7 @@
         <!-- /.col-lg-12 -->
     </div>
 
-    <div class="row row-spaced">
-        <div class="col-xs-12">
-            <div class="btn-group">
-                <a class="btn btn-default" href="{% url 'send_client' client.id %}">Send Notification</a>
-            </div>
-            <div class="clearfix"></div>
-        </div>
-    </div>
+    {% include "messages.html" %}
 
     <!-- /.row -->
     <div class="row">
@@ -71,7 +64,8 @@
                             <th>Name</th>
                             <th>Phone Numbers</th>
                             <th>Emails</th>
-                            <th>&nbsp;</th>
+                            <th>WhatsApp</th>
+                            <th width="100">&nbsp;</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -80,8 +74,9 @@
                             <td>{{ item.display_name }}</td>
                             <td>{{ item | data:'PHONE' | default:'-' }}</td>
                             <td>{{ item | data:'EMAIL' | default:'-' }}</td>
+                            <td>{{ item | data:'WHATSAPP' | default:'-' }}</td>
                             <td>
-                                <a class="btn btn-sm btn-default">
+                                <a class="btn btn-sm btn-default" href="{% url 'clone_client' client.id item.id %}">
                                     <i class="fa fa-copy"></i> Copy
                                 </a>
                             </td>
