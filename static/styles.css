@@ -8,6 +8,10 @@ div.row-spaced {
     margin-bottom: 15px;
 }
 
+.actions-cell {
+    text-align: center;
+}
+
 .panel-heading h2 {
     margin: 0;
 }

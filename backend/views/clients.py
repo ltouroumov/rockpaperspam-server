@@ -1,5 +1,6 @@
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.shortcuts import redirect
+from django.views.generic import DeleteView
 from django.views.generic import View, DetailView, ListView
 from django.views.generic.base import TemplateResponseMixin
 from django.views.generic.detail import SingleObjectMixin
@@ -18,10 +19,23 @@ class Index(LoginRequiredMixin, ListView):
     model = Client
     template_name = "backend/clients/index.html"
 
+    def get_queryset(self):
+        if "q" in self.request.GET:
+            q = self.request.GET['q']
+            if len(q) > 0:
+                return Client.objects.filter(profile__display_name__icontains=q)
+
+        return super().get_queryset()
+
 
 class Show(LoginRequiredMixin, DetailView):
     model = Client
     template_name = "backend/clients/show.html"
+
+
+class Delete(LoginRequiredMixin, DeleteView):
+    model = Client
+    template_name = "backend/clients/delete.html"
 
 
 class SendForm(forms.Form):

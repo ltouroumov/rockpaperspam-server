@@ -20,6 +20,7 @@ urlpatterns = [
 
     url(r'^clients$', clients.Index.as_view(), name='clients'),
     url(r'^clients/(?P<pk>[a-f0-9\-]+)$', clients.Show.as_view(), name='show_client'),
+    url(r'^clients/(?P<pk>[a-f0-9\-]+)/delete$', clients.Delete.as_view(), name='delete_client'),
     url(r'^clients/(?P<pk>[a-f0-9\-]+)/send$', clients.Send.as_view(), name='send_client'),
     url(r'^clients/(?P<pk>[a-f0-9\-]+)/clone/(?P<cid>[a-f0-9\-]+)$', clients.Clone.as_view(), name='clone_client'),
 

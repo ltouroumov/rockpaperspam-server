@@ -6,3 +6,4 @@ staticfiles/
 venv/
 __pycache__/
 env/
+contacts.json

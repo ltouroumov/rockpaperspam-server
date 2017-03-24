@@ -10,6 +10,22 @@
         <!-- /.col-lg-12 -->
     </div>
 
+    <div class="row row-spaced">
+        <div class="col-xs-12 col-md-4">
+            <form method="get">
+                <div class="input-group">
+                    <div class="input-group-addon">
+                        <i class="fa fa-search"></i>
+                    </div>
+                    <input class="form-control" name="q" placeholder="..." value="{{ request.GET.q }}">
+                    <div class="input-group-btn">
+                        <button class="btn btn-default">Search</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
     {% include "messages.html" %}
 
     <!-- /.row -->
@@ -21,7 +37,7 @@
                         <th>Profile Name</th>
                         <th>Client ID</th>
                         <th>Last Sync</th>
-                        <th>&nbsp;</th>
+                        <th width="75">&nbsp;</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -30,7 +46,9 @@
                         <td><a href="{% url 'show_client' client.id %}">{{ client.profile.display_name }}</a></td>
                         <td><a href="{% url 'show_client' client.id %}">{{ client.id }}</a></td>
                         <td>{{ client | last_sync }}</td>
-                        <td>&nbsp;</td>
+                        <td class="actions-cell">
+                            <a href="{% url 'delete_client' client.id %}" class="btn btn-danger"><i class="fa fa-trash"></i></a>
+                        </td>
                     </tr>
                 {% endfor %}
                 </tbody>
