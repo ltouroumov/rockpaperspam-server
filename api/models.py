@@ -32,6 +32,10 @@ class Contact(models.Model):
     display_name = models.CharField(max_length=1024)
 
     @property
+    def key(self):
+        return "%s/%d" % (self.contact_key, self.contact_id)
+
+    @property
     def data(self):
         return Data.objects.filter(raw_contact__contact__id=self.id)
 

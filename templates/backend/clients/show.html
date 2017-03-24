@@ -74,9 +74,9 @@
                             <td>
                                 <dl class="dl-horizontal" style="margin-bottom: 0;">
                                 {% for raw_contact in item.raw_contacts.all %}
-                                    {% if raw_contact|has_data:'PHONE,EMAIL' is True %}
+                                    {% if raw_contact|has_data:'PHONE,EMAIL,WHATSAPP' is True %}
                                     <dt>{{ raw_contact.contact_type }}</dt>
-                                    <dd>{{ raw_contact | data:'PHONE,EMAIL' }}</dd>
+                                    <dd>{{ raw_contact | data:'PHONE,EMAIL,WHATSAPP' }}</dd>
                                     {% endif %}
                                 {% endfor %}
                                 </dl>
