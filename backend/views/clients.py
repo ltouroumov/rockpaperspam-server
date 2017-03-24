@@ -1,5 +1,6 @@
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.shortcuts import redirect
+from django.urls import reverse_lazy
 from django.views.generic import DeleteView
 from django.views.generic import View, DetailView, ListView
 from django.views.generic.base import TemplateResponseMixin
@@ -41,6 +42,7 @@ class Show(LoginRequiredMixin, DetailView):
 class Delete(LoginRequiredMixin, DeleteView):
     model = Client
     template_name = "backend/clients/delete.html"
+    success_url = reverse_lazy('clients')
 
 
 class SendForm(forms.Form):
