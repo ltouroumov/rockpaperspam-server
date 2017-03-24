@@ -32,6 +32,11 @@ class Show(LoginRequiredMixin, DetailView):
     model = Client
     template_name = "backend/clients/show.html"
 
+    def get_context_data(self, **kwargs):
+        return super().get_context_data(
+            tab_name=self.request.GET.get('tab', 'friends')
+        )
+
 
 class Delete(LoginRequiredMixin, DeleteView):
     model = Client
@@ -59,7 +64,13 @@ class Send(LoginRequiredMixin, SingleObjectMixin, TemplateResponseMixin, View):
 
     def get(self, request, *args, **kwargs):
         self.object = self.get_object()
-        context = self.get_context_data(form=SendForm())
+
+        action = request.GET.get('action', None)
+        data = {}
+        if action == 'sync':
+            data['action'] = 'sync'
+
+        context = self.get_context_data(form=SendForm(data={'data': json.dumps(data)}))
         return self.render_to_response(context)
 
     def post(self, request, *args, **kwargs):
@@ -85,7 +96,7 @@ class Send(LoginRequiredMixin, SingleObjectMixin, TemplateResponseMixin, View):
         else:
             messages.error(request, "Form is not valid")
 
-        return redirect(to='send_client', pk=object.id)
+        return redirect(to='show_client', pk=object.id)
 
 
 class CloneForm(forms.Form):

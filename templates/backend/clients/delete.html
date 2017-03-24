@@ -21,7 +21,13 @@
                 <div class="panel-footer">
                     <div class="pull-right">
                         <button class="btn btn-success" type="submit">Yes</button>
-                        <a class="btn btn-danger" href="{% url 'clients' %}">No</a>
+                        {% if "return" in request.GET %}
+                            {% if request.GET.return == 'show' %}
+                                <a class="btn btn-danger" href="{% url 'show_client' object.id %}">No</a>
+                            {% endif %}
+                        {% else %}
+                            <a class="btn btn-danger" href="{% url 'clients' %}">No</a>
+                        {% endif %}
                     </div>
                     <div class="clearfix"></div>
                 </div>
