@@ -8,6 +8,7 @@ from django.contrib import messages
 from api.models import Client
 from backend import settings
 from backend.firebase import FirebaseCloudMessaging
+from backend.utils import ModelChoiceFieldWithLabel
 import json
 
 from backend.models import Endpoint
@@ -74,8 +75,9 @@ class Send(LoginRequiredMixin, SingleObjectMixin, TemplateResponseMixin, View):
 
 
 class CloneForm(forms.Form):
-    endpoint = forms.ModelChoiceField(
+    endpoint = ModelChoiceFieldWithLabel(
         label="Endpoint",
+        custom_label=lambda obj: str.format("{0} ({1})", obj.name, obj.number),
         required=True,
         queryset=Endpoint.objects.all())
 
@@ -99,10 +101,17 @@ class Clone(LoginRequiredMixin, TemplateResponseMixin, View):
 
         form = CloneForm(request.POST)
         if form.is_valid():
+            target = form.cleaned_data['endpoint']
+
+            firebase = FirebaseCloudMessaging(server_key=settings.GCM_SERVER_KEY)
+            firebase.send(to=client.token, data={
+                'action': 'dupe',
+                'contact_id': contact.contact_id,
+                'contact_key': contact.contact_key,
+                'target': target.number
+            })
+
             messages.success(request, "Contact Cloned")
-
-            # TODO: Send clone notification
-
             return redirect(to='show_client', pk=pk)
         else:
             return self.render_to_response({

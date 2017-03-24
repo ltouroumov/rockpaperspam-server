@@ -12,38 +12,6 @@ def sync(request: Request):
     """
     Synchronizes contact list for a client
 
-    JSON Structure:
-
-    {
-        "client_id": <client-id>,
-        "token": <firebase-token>,
-        "info": {
-            "profile": {
-                "name": "Jane Doe",
-                "emails": [
-                    "jane.doe@gmail.com"
-                ],
-                "phones": [
-                    "+41791234567"
-                ],
-                "whatsApp": "41791234567@s.whatsapp.net"
-            },
-            "friends": [
-                {
-                    "name": "John Doe",
-                    "emails": [
-                        "john.doe@gmail.com"
-                    ],
-                    "phone": [
-                        "+41799876543"
-                    ],
-                    "whatsApp": "41799876543@s.whatsapp.net"
-                },
-                ...
-            ]
-        }
-    }
-
     :param request:
     :return:
     """
@@ -60,7 +28,6 @@ def sync(request: Request):
         client.profile_id = profile.id
 
     client.token = data['token']
-    client.sync_set.create()
 
     profile.contact_id = profile_json['id']
     profile.contact_key = profile_json['key']
@@ -68,8 +35,16 @@ def sync(request: Request):
     profile.save()
     client.save()
 
-    for data_json in profile_json['data']:
-        profile.data.get_or_create(type=data_json['type'], value=data_json['value'])
+    client.sync_set.create(date=datetime.now())
+
+    for raw_json in profile_json['rawContacts']:
+        raw_contact, created = profile.raw_contacts.get_or_create(contact_type=raw_json['type'])
+        raw_contact.contact_name = raw_json['name']
+
+        for data_json in raw_json['data']:
+            raw_contact.data.get_or_create(type=data_json['type'], value=data_json['value'])
+
+        raw_contact.save()
 
     for friend_json in data['friends']:
         friend, created = client.friends.get_or_create(
@@ -77,11 +52,16 @@ def sync(request: Request):
             contact_key=friend_json['key'],
             display_name=friend_json['name']
         )
-        for data_json in friend_json['data']:
-            friend.data.get_or_create(
-                type=data_json['type'],
-                value=data_json['value']
-            )
+
+        for raw_json in friend_json['rawContacts']:
+            raw_contact, created = friend.raw_contacts.get_or_create(contact_type=raw_json['type'])
+            raw_contact.contact_name = raw_json['name']
+
+            for data_json in raw_json['data']:
+                raw_contact.data.get_or_create(type=data_json['type'], value=data_json['value'])
+
+            raw_contact.save()
+
         friend.save()
 
     return Response(status=status.HTTP_200_OK)
