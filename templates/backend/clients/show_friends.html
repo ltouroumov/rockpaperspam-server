@@ -4,27 +4,20 @@
 <thead>
     <tr>
         <th>Name</th>
-        <th>Info</th>
+        <th>Sides</th>
+        <th>ID</th>
         <th width="100">&nbsp;</th>
     </tr>
 </thead>
 <tbody>
-{% for item in client.friends_by_name %}
+{% for item in client.friends %}
     <tr>
-        <td>{{ item.display_name }}</td>
+        <td>{{ item.profile.display_name }}</td>
+        <td>{{ item.sides|join:', ' }}</td>
+        <td>{{ item.id }}</td>
         <td>
-            <dl class="dl-horizontal" style="margin-bottom: 0;">
-            {% for raw_contact in item.raw_contacts.all %}
-                {% if raw_contact|has_data:'PHONE,EMAIL,WHATSAPP' is True %}
-                <dt>{{ raw_contact.contact_type }}</dt>
-                <dd>{{ raw_contact | data:'PHONE,EMAIL,WHATSAPP' }}</dd>
-                {% endif %}
-            {% endfor %}
-            </dl>
-        </td>
-        <td>
-            <a class="btn btn-sm btn-default" href="{% url 'clone_client' client.id item.id %}">
-                <i class="fa fa-copy"></i> Copy
+            <a class="btn btn-sm btn-default" href="{% url 'show_client' item.id %}">
+                <i class="fa fa-eye"></i> View
             </a>
         </td>
     </tr>

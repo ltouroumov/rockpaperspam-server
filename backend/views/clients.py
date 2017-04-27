@@ -35,7 +35,7 @@ class Show(LoginRequiredMixin, DetailView):
 
     def get_context_data(self, **kwargs):
         return super().get_context_data(
-            tab_name=self.request.GET.get('tab', 'friends')
+            tab_name=self.request.GET.get('tab', 'contacts')
         )
 
 

@@ -68,8 +68,14 @@
                 <div class="panel-heading">
 
             <ul class="nav nav-pills">
+                <li {% if tab_name == 'contacts' %}class="active"{% endif %}>
+                    <a href="?tab=contacts"><i class="fa fa-users"></i> Contacts</a>
+                </li>
                 <li {% if tab_name == 'friends' %}class="active"{% endif %}>
-                    <a href="?tab=friends"><i class="fa fa-users"></i> Friends</a>
+                    <a href="?tab=friends"><i class="fa fa-heart"></i> Friends</a>
+                </li>
+                <li {% if tab_name == 'games' %}class="active"{% endif %}>
+                    <a href="?tab=games"><i class="fa fa-gamepad"></i> Games</a>
                 </li>
                 <li {% if tab_name == 'syncs' %}class="active"{% endif %}>
                     <a href="?tab=syncs"><i class="fa fa-refresh"></i> Syncs</a>
@@ -77,8 +83,12 @@
             </ul>
                 </div>
                 <div class="panel-body">
-                {% if tab_name == 'friends' %}
+                {% if tab_name == 'contacts' %}
+                    {% include 'backend/clients/show_contacts.html' with client=client %}
+                {% elif tab_name == 'friends' %}
                     {% include 'backend/clients/show_friends.html' with client=client %}
+                {% elif tab_name == 'games' %}
+                    {% include 'backend/games/table.html' with object_list=client.games %}
                 {% elif tab_name == 'syncs' %}
                     {% include 'backend/clients/show_syncs.html' with client=client %}
                 {% else %}

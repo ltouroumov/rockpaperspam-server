@@ -1,8 +1,10 @@
 from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
+from rest_framework.exceptions import APIException
 from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework import permissions
+from django.db.utils import IntegrityError
 from .models import *
 
 
@@ -46,15 +48,26 @@ def sync(request: Request):
 
         raw_contact.save()
 
-    old_friends = {friend.key: friend for friend in client.friends.all()}
+    old_friends = {friend.key: friend for friend in client.contacts.all()}
+    friends_count_before = len(old_friends)
+    created_friends = 0
+    updated_friends = 0
 
     # Add or update friends
     for friend_json in data['friends']:
-        friend, created = client.friends.get_or_create(
+        friend, created = client.contacts.get_or_create(
             contact_id=friend_json['id'],
             contact_key=friend_json['key'],
             display_name=friend_json['name']
         )
+
+        if created:
+            created_friends += 1
+            print("created", friend.key)
+        else:
+            updated_friends += 1
+            print("updated", friend.key)
+
         # Remove from old_friends if exists
         if friend.key in old_friends:
             del old_friends[friend.key]
@@ -70,8 +83,149 @@ def sync(request: Request):
 
         friend.save()
 
+    deleted_friends = len(old_friends)
+
     # Remove old friends :(
     for old_friend in old_friends.values():
+        print("deleted", old_friend.key)
+        client.contacts.remove(old_friend)
         old_friend.delete()
+
+    friends_count_after = client.contacts.count()
+
+    return Response(status=status.HTTP_200_OK, data={
+        'client_id': client.id,
+        'friends_count_before': friends_count_before,
+        'friends_count_after': friends_count_after,
+        'created_friends': created_friends,
+        'deleted_friends': deleted_friends,
+        'updated_friends': updated_friends,
+    })
+
+
+@api_view(['GET'])
+@permission_classes([permissions.AllowAny])
+def friends(request: Request):
+    client_id = request.GET.get('of')
+    try:
+        client = Client.objects.get(id=client_id)
+    except Client.DoesNotExist:
+        from rest_framework.exceptions import NotFound
+        return NotFound()
+
+    def build_profile(friend):
+        return {
+            'id': friend.id,
+            'display_name': friend.profile.display_name,
+            'stats': {
+                'global': {'victories': 100, 'defeats': 100},
+                'versus': {'victories': 10, 'defeats': 15}
+            }
+        }
+
+    friends_json = {
+        'client': {'display_name': client.profile.display_name, 'id': client.id},
+        'friends': list(map(build_profile, client.friends))
+    }
+
+    return Response(status=status.HTTP_200_OK, data=friends_json)
+
+
+class GameException(APIException):
+    status_code = 400
+
+
+@api_view(['GET'])
+@permission_classes([permissions.AllowAny])
+def games(request: Request):
+    from api.serializers import GameSerializer
+
+    if 'of' not in request.GET:
+        raise APIException("Missing client")
+
+    try:
+        client = Client.objects.get(id=request.GET.get('of'))
+    except Client.DoesNotExist:
+        raise APIException("Client does not exist")
+
+    game_filter = request.GET.get('status', 'any')
+    games = Game.objects.filter(player__client=client)
+    if game_filter != 'any':
+        games = games.filter(status=game_filter)
+
+    return Response(status=status.HTTP_200_OK, data=map(lambda game: GameSerializer(game).data, games))
+
+
+@api_view(['POST'])
+@permission_classes([permissions.AllowAny])
+def start(request: Request):
+
+    try:
+        challenger = Client.objects.get(id=request.data['challenger'])
+    except Client.DoesNotExist:
+        return Response(status=status.HTTP_400_BAD_REQUEST, data={'error': 'Could not find challenger'})
+
+    try:
+        defender = Client.objects.get(id=request.data['defender'])
+    except Client.DoesNotExist:
+        return Response(status=status.HTTP_400_BAD_REQUEST, data={'error': 'Could not find defender'})
+
+    if 'rounds' not in request.data:
+        return Response(status=status.HTTP_400_BAD_REQUEST, data={'error': 'Missing number of rounds'})
+
+    game = Game.objects.create(rounds_num=request.data['rounds'])
+    game.player_set.create(client=challenger)
+    game.player_set.create(client=defender)
+
+    game.rounds.create(number=1)
+
+    game.save()
+
+    # TODO: Send notifications so players can play
+
+    return Response(status=status.HTTP_201_CREATED, data={'id': game.id})
+
+
+@api_view(['POST'])
+@permission_classes([permissions.AllowAny])
+def play(request: Request, id, rid):
+
+    only_resolve = request.GET.get('resolve', 'false') == 'true'
+
+    try:
+        game = Game.objects.get(id=id)
+    except Game.DoesNotExist:
+        raise GameException('Game not found')
+
+    if game.status != Game.OPEN:
+        raise GameException('Game closed')
+
+    try:
+        round = game.rounds.get(number=rid)
+    except Round.DoesNotExist:
+        raise GameException('Invalid round number')
+
+    if not only_resolve:
+
+        try:
+            player = game.player_set.get(client_id=request.data['from'])
+        except Player.DoesNotExist:
+            raise GameException('Invalid player')
+
+        try:
+            round.move_set.create(player=player, move=request.data['move'])
+        except IntegrityError:
+            raise GameException('You\'ve already played this round')
+
+    if round.complete:
+        round.resolve()
+        if game.over:
+            print("Game is over :)")
+        else:
+            print("Moving on to next round")
+            game.rounds.create(number=round.number+1)
+            # TODO: Send notifications to clients
+    elif only_resolve:
+        return APIException('Incomplete round')
 
     return Response(status=status.HTTP_200_OK)
