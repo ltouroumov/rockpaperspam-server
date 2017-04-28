@@ -156,6 +156,15 @@ def games(request: Request):
     return Response(status=status.HTTP_200_OK, data=map(lambda game: GameSerializer(game).data, games))
 
 
+@api_view(['GET'])
+@permission_classes([permissions.AllowAny])
+def game(request: Request, pk):
+    from api.serializers import GameSerializer
+
+    obj = Game.objects.get(id=pk)
+    return Response(status=status.HTTP_200_OK, data=GameSerializer(obj).data)
+
+
 @api_view(['POST'])
 @permission_classes([permissions.AllowAny])
 def start(request: Request):
@@ -173,59 +182,64 @@ def start(request: Request):
     if 'rounds' not in request.data:
         return Response(status=status.HTTP_400_BAD_REQUEST, data={'error': 'Missing number of rounds'})
 
-    game = Game.objects.create(rounds_num=request.data['rounds'])
-    game.player_set.create(client=challenger)
-    game.player_set.create(client=defender)
+    the_game = Game.objects.create(rounds_num=request.data['rounds'])
+    the_game.player_set.create(client=challenger)
+    the_game.player_set.create(client=defender)
 
-    game.rounds.create(number=1)
+    the_game.rounds.create(number=1)
 
-    game.save()
+    the_game.save()
 
     # TODO: Send notifications so players can play
 
-    return Response(status=status.HTTP_201_CREATED, data={'id': game.id})
+    return Response(status=status.HTTP_201_CREATED, data={'id': the_game.id})
 
 
 @api_view(['POST'])
 @permission_classes([permissions.AllowAny])
-def play(request: Request, id, rid):
+def play(request: Request, pk, rid):
 
     only_resolve = request.GET.get('resolve', 'false') == 'true'
 
     try:
-        game = Game.objects.get(id=id)
+        the_game = Game.objects.get(id=pk)
     except Game.DoesNotExist:
         raise GameException('Game not found')
 
-    if game.status != Game.OPEN:
+    if the_game.status != Game.OPEN:
         raise GameException('Game closed')
 
     try:
-        round = game.rounds.get(number=rid)
+        cur_round = the_game.rounds.get(number=rid)
     except Round.DoesNotExist:
         raise GameException('Invalid round number')
 
     if not only_resolve:
-
         try:
-            player = game.player_set.get(client_id=request.data['from'])
+            player = the_game.player_set.get(client_id=request.data['from'])
         except Player.DoesNotExist:
             raise GameException('Invalid player')
 
         try:
-            round.move_set.create(player=player, move=request.data['move'])
+            cur_round.move_set.create(player=player, move=request.data['move'])
         except IntegrityError:
             raise GameException('You\'ve already played this round')
 
-    if round.complete:
-        round.resolve()
-        if game.over:
+    if cur_round.complete:
+        cur_round.resolve()
+        if the_game.over:
             print("Game is over :)")
+            the_game.resolve()
+            if the_game.winner:
+                return Response(status=status.HTTP_200_OK, data={'is_over': True, 'winner': the_game.winner.client.id})
+            else:
+                return Response(status=status.HTTP_200_OK, data={'is_over': True, 'winner': None})
         else:
             print("Moving on to next round")
-            game.rounds.create(number=round.number+1)
+            next_round = the_game.rounds.create(number=cur_round.number+1)
             # TODO: Send notifications to clients
+            return Response(status=status.HTTP_200_OK, data={'is_over': False, 'next_round': next_round.number})
     elif only_resolve:
         return APIException('Incomplete round')
-
-    return Response(status=status.HTTP_200_OK)
+    else:
+        return Response(status=status.HTTP_200_OK, data={'is_over': False})

@@ -1,8 +1,8 @@
-import enum
-
-from django.db import models
-from datetime import datetime
 import uuid
+from collections import defaultdict
+from datetime import datetime
+from functools import reduce
+from django.db import models
 
 
 class Client(models.Model):
@@ -125,7 +125,7 @@ class Data(models.Model):
 
 class Player(models.Model):
     client = models.ForeignKey(to='Client')
-    game = models.ForeignKey(to='Game')
+    game = models.ForeignKey(to='Game', on_delete=models.CASCADE)
 
 
 class Game(models.Model):
@@ -138,6 +138,7 @@ class Game(models.Model):
 
     rounds_num = models.IntegerField()
     status = models.CharField(max_length=1, default='O', choices=STATUS)
+    winner = models.ForeignKey(to='Player', related_name='game_won', blank=True, null=True)
 
     @property
     def rounds_ordered(self):
@@ -151,9 +152,21 @@ class Game(models.Model):
     def over(self):
         return self.rounds.count() == self.rounds_num
 
-    @property
-    def winner(self):
-        return "???"
+    def resolve(self):
+        if not self.over:
+            return
+
+        def _reducer(acc, winner):
+            acc[winner] += 1
+            return acc
+
+        winners = list(map(lambda r: r.winner_id, self.rounds.all()))
+        winners = reduce(_reducer, winners, {p: 0 for p in set(winners)})
+        winners = sorted(winners.items(), key=lambda t: -t[1])
+        winners = list(winners)
+        self.winner_id = winners[0][0]
+        self.status = Game.CLOSED
+        self.save()
 
 
 class Moves:
@@ -184,8 +197,8 @@ class Moves:
 
 
 class Round(models.Model):
-    game = models.ForeignKey(to='Game', related_name='rounds')
-    winner = models.ForeignKey(to='Player', blank=True, null=True)
+    game = models.ForeignKey(to='Game', related_name='rounds', on_delete=models.CASCADE)
+    winner = models.ForeignKey(to='Player', related_name='rounds_won', blank=True, null=True)
     number = models.SmallIntegerField(default=0)
 
     @property
@@ -197,14 +210,12 @@ class Round(models.Model):
 
     def resolve(self):
         import itertools
-        print('resolving round ...')
         moves = self.move_set.all()
         if len(moves) > 2:
             raise Exception("Too many moves for this round")
 
         for move1, move2 in itertools.combinations(moves, 2):
             if move1.move == move2.move:
-                print("Draw -_-")
                 self.winner = None
             else:
                 print(move1.move, "VS", move2.move)
@@ -222,7 +233,7 @@ class Round(models.Model):
 class Move(models.Model):
     MOVES = tuple(Moves.NAMES.items())
 
-    round = models.ForeignKey(to='Round')
+    round = models.ForeignKey(to='Round', on_delete=models.CASCADE)
     player = models.ForeignKey(to='Player')
 
     move = models.CharField(max_length=3, choices=MOVES)

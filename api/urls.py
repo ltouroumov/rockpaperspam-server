@@ -6,5 +6,6 @@ urlpatterns = [
     url(r'^friends$', views.friends),
     url(r'^games$', views.games),
     url(r'^games/start$', views.start),
-    url(r'^games/(?P<id>\d+)/(?P<rid>\d+)$', views.play),
+    url(r'^games/(?P<pk>\d+)$', views.game),
+    url(r'^games/(?P<pk>\d+)/(?P<rid>\d+)$', views.play),
 ]

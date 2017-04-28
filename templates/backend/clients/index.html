@@ -10,9 +10,9 @@
         <!-- /.col-lg-12 -->
     </div>
 
-    <div class="row row-spaced">
+    <div class="row">
         <div class="col-xs-12 col-md-4">
-            <form method="get">
+            <form method="get" style="margin: 20px 0;">
                 <div class="input-group">
                     <div class="input-group-addon">
                         <i class="fa fa-search"></i>
@@ -23,6 +23,9 @@
                     </div>
                 </div>
             </form>
+        </div>
+        <div class="col-xs-12 col-md-8">
+            <div class="pull-right">{% include "backend/pagination.html" %}</div>
         </div>
     </div>
 
@@ -53,6 +56,12 @@
                 {% endfor %}
                 </tbody>
             </table>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-xs-12">
+            <div class="pull-right">{% include "backend/pagination.html" %}</div>
         </div>
     </div>
 {% endblock content %}

@@ -19,6 +19,7 @@ from backend.models import Endpoint
 class Index(LoginRequiredMixin, ListView):
     model = Client
     template_name = "backend/clients/index.html"
+    paginate_by = 25
 
     def get_queryset(self):
         if "q" in self.request.GET:

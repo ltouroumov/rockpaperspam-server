@@ -8,6 +8,7 @@ from api.models import Game
 class Index(LoginRequiredMixin, ListView):
     model = Game
     template_name = "backend/games/index.html"
+    paginate_by = 25
 
 
 class Show(LoginRequiredMixin, DetailView):

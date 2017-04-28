@@ -1,4 +1,4 @@
-from django.conf.urls import include, url
+from django.conf.urls import include, url, handler404, handler500
 from django.contrib import admin
 from django.views.generic.base import RedirectView
 
@@ -8,6 +8,9 @@ from .views import clients, syncs, endpoints, games
 admin.site.site_header = "RPS Admin"
 admin.site.site_title = "RPS Admin"
 admin.site.index_title = "Admin Dashboards"
+
+handler404 = 'backend.views.handlers.not_found'
+handler500 = 'backend.views.handlers.server_error'
 
 urlpatterns = [
     url(r'^admin/', admin.site.urls),
@@ -24,7 +27,7 @@ urlpatterns = [
     url(r'^clients/(?P<pk>[a-f0-9\-]+)/send$', clients.Send.as_view(), name='send_client'),
     url(r'^clients/(?P<pk>[a-f0-9\-]+)/clone/(?P<cid>[a-f0-9\-]+)$', clients.Clone.as_view(), name='clone_client'),
 
-    url(r'^syncs$', syncs.index, name='syncs'),
+    url(r'^syncs$', syncs.Index.as_view(), name='syncs'),
 
     url(r'^endpoints$', endpoints.Index.as_view(), name='endpoints'),
     url(r'^endpoints/new$', endpoints.Create.as_view(), name='new_endpoint'),

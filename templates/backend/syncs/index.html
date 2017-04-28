@@ -7,6 +7,12 @@
         </div>
         <!-- /.col-lg-12 -->
     </div>
+
+    <div class="row">
+        <div class="col-xs-12">
+            <div class="pull-right">{% include "backend/pagination.html" %}</div>
+        </div>
+    </div>
     <!-- /.row -->
     <div class="row">
         <div class="col-xs-12">
@@ -18,7 +24,7 @@
                     </tr>
                 </thead>
                 <tbody>
-                {% for sync in syncs %}
+                {% for sync in object_list %}
                     <tr>
                         <td>
                             <a href="{% url 'show_client' sync.client_id %}">
@@ -31,6 +37,12 @@
                 {% endfor %}
                 </tbody>
             </table>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-xs-12">
+            <div class="pull-right">{% include "backend/pagination.html" %}</div>
         </div>
     </div>
 {% endblock content %}

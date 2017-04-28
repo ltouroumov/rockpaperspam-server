@@ -1,35 +1,40 @@
 from datetime import datetime, timedelta
 
-from django.contrib.auth import authenticate, login
-from django.http import Http404
-from django.http import HttpRequest
-from django.shortcuts import render, redirect
-from django.contrib.auth.decorators import login_required
-from api.models import Client, Sync
+from django.contrib.auth.mixins import LoginRequiredMixin
+from django.views.generic import ListView
+
+from api.models import Sync
 
 
-@login_required
-def index(request):
-    start_time = request.GET.get('start', None)
-    period = request.GET.get('period', None)
+class Index(LoginRequiredMixin, ListView):
+    model = Sync
+    template_name = "backend/syncs/index.html"
+    paginate_by = 25
 
-    if start_time is None:
-        start_time = datetime.now()
-    else:
-        start_time = datetime.strptime(start_time, "%Y-%m-%d")
+    def get_queryset(self):
+        start_time = self.request.GET.get('start', None)
+        period = self.request.GET.get('period', None)
 
-    if period is None:
-        period = timedelta(seconds=24 * 3600)
-    else:
-        period = timedelta(seconds=int(period))
+        if start_time or period:
+            if start_time is None:
+                start_time = datetime.now()
+            else:
+                start_time = datetime.strptime(start_time, "%Y-%m-%d")
 
-    end_time = start_time - period
+            if period is None:
+                period = timedelta(seconds=24 * 3600)
+            else:
+                period = timedelta(seconds=int(period))
 
-    print("Start Time", start_time)
-    print("End Time", end_time)
-    print("Period", period)
+            end_time = start_time - period
 
-    syncs = Sync.objects.filter(date__gte=end_time, date__lte=start_time).order_by('-date')
-    return render(request, "backend/syncs/index.html", {
-        'syncs': syncs
-    })
+            print("Start Time", start_time)
+            print("End Time", end_time)
+            print("Period", period)
+
+            syncs = Sync.objects.filter(date__gte=end_time, date__lte=start_time)
+        else:
+            print("All syncs ...")
+            syncs = Sync.objects.all()
+
+        return syncs.order_by('-date')
