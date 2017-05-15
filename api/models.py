@@ -139,6 +139,8 @@ class Game(models.Model):
     rounds_num = models.IntegerField()
     status = models.CharField(max_length=1, default='O', choices=STATUS)
     winner = models.ForeignKey(to='Player', related_name='game_won', blank=True, null=True)
+    date_started = models.DateTimeField(auto_now_add=True)
+    date_ended = models.DateTimeField(blank=True, null=True)
 
     @property
     def rounds_ordered(self):
@@ -162,10 +164,22 @@ class Game(models.Model):
 
         winners = list(map(lambda r: r.winner_id, self.rounds.all()))
         winners = reduce(_reducer, winners, {p: 0 for p in set(winners)})
-        winners = sorted(winners.items(), key=lambda t: -t[1])
-        winners = list(winners)
-        self.winner_id = winners[0][0]
+
+        winner = None
+        max_score = 0
+        for player, score in winners.items():
+            if score > max_score:
+                # Gather the player with the highest score
+                winner = player
+                max_score = score
+            elif score == max_score:
+                # We have a draw
+                winner = None
+                break
+
+        self.winner_id = winner
         self.status = Game.CLOSED
+        self.date_ended = datetime.now()
         self.save()
 
 

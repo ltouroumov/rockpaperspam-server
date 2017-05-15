@@ -17,8 +17,10 @@ def sync(request: Request):
     :param request:
     :return:
     """
+    from pprint import pprint
 
     data = request.data
+    pprint(data)
     profile_json = data['profile']
 
     try:
@@ -111,7 +113,7 @@ def friends(request: Request):
         client = Client.objects.get(id=client_id)
     except Client.DoesNotExist:
         from rest_framework.exceptions import NotFound
-        return NotFound()
+        raise NotFound()
 
     def build_profile(friend):
         return {
