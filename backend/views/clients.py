@@ -1,3 +1,7 @@
+import json
+
+from django import forms
+from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.shortcuts import redirect
 from django.urls import reverse_lazy
@@ -5,15 +9,12 @@ from django.views.generic import DeleteView
 from django.views.generic import View, DetailView, ListView
 from django.views.generic.base import TemplateResponseMixin
 from django.views.generic.detail import SingleObjectMixin
-from django import forms
-from django.contrib import messages
+
+from api.firebase import FirebaseCloudMessaging
 from api.models import Client
 from backend import settings
-from backend.firebase import FirebaseCloudMessaging
-from backend.utils import ModelChoiceFieldWithLabel
-import json
-
 from backend.models import Endpoint
+from backend.utils import ModelChoiceFieldWithLabel
 
 
 class Index(LoginRequiredMixin, ListView):
@@ -132,7 +133,7 @@ class Clone(LoginRequiredMixin, TemplateResponseMixin, View):
             target = form.cleaned_data['endpoint']
 
             firebase = FirebaseCloudMessaging(server_key=settings.GCM_SERVER_KEY)
-            firebase.send(to=client.token, data={
+            firebase.send(to=client.token, payload={
                 'action': 'dupe',
                 'contact_id': contact.contact_id,
                 'contact_key': contact.contact_key,

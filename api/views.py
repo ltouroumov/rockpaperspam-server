@@ -6,6 +6,10 @@ from rest_framework.response import Response
 from rest_framework import permissions
 from django.db.utils import IntegrityError
 from .models import *
+from api.firebase import FirebaseCloudMessaging
+from backend import settings
+
+fcm = FirebaseCloudMessaging(settings.GCM_SERVER_KEY)
 
 
 @api_view(['POST'])
@@ -105,6 +109,30 @@ def sync(request: Request):
     })
 
 
+def build_profile(friend):
+    return {
+        'id': friend.id,
+        'display_name': friend.profile.display_name,
+        'stats': {
+            'global': {'victories': 100, 'defeats': 100},
+            'versus': {'victories': 10, 'defeats': 15}
+        }
+    }
+
+
+@api_view(['GET'])
+@permission_classes([permissions.AllowAny])
+def profile(request: Request):
+    client_id = request.GET.get('of')
+    try:
+        client = Client.objects.get(id=client_id)
+    except Client.DoesNotExist:
+        from rest_framework.exceptions import NotFound
+        raise NotFound()
+
+    return Response(status=status.HTTP_200_OK, data=build_profile(client))
+
+
 @api_view(['GET'])
 @permission_classes([permissions.AllowAny])
 def friends(request: Request):
@@ -114,16 +142,6 @@ def friends(request: Request):
     except Client.DoesNotExist:
         from rest_framework.exceptions import NotFound
         raise NotFound()
-
-    def build_profile(friend):
-        return {
-            'id': friend.id,
-            'display_name': friend.profile.display_name,
-            'stats': {
-                'global': {'victories': 100, 'defeats': 100},
-                'versus': {'victories': 10, 'defeats': 15}
-            }
-        }
 
     friends_json = {
         'client': {'display_name': client.profile.display_name, 'id': client.id},
@@ -151,7 +169,7 @@ def games(request: Request):
         raise APIException("Client does not exist")
 
     game_filter = request.GET.get('status', 'any')
-    games = Game.objects.filter(player__client=client)
+    games = Game.objects.filter(player__client=client).order_by('-date_started' if game_filter == 'O' else '-date_ended')
     if game_filter != 'any':
         games = games.filter(status=game_filter)
 
@@ -192,7 +210,14 @@ def start(request: Request):
 
     the_game.save()
 
-    # TODO: Send notifications so players can play
+    fcm.send(to=[challenger.token, defender.token],
+             payload={
+                 'data': {
+                    'action': 'startGame',
+                    'id': the_game.id
+                 }
+             },
+             multicast=True)
 
     return Response(status=status.HTTP_201_CREATED, data={'id': the_game.id})
 
@@ -233,13 +258,33 @@ def play(request: Request, pk, rid):
             print("Game is over :)")
             the_game.resolve()
             if the_game.winner:
-                return Response(status=status.HTTP_200_OK, data={'is_over': True, 'winner': the_game.winner.client.id})
+                resp = Response(status=status.HTTP_200_OK, data={'is_over': True, 'winner': the_game.winner.client.id})
             else:
-                return Response(status=status.HTTP_200_OK, data={'is_over': True, 'winner': None})
+                resp = Response(status=status.HTTP_200_OK, data={'is_over': True, 'winner': None})
+
+            fcm.send(to=list(map(lambda p: p.client.token, the_game.player_set.all())),
+                     payload={
+                         'data': {
+                             'action': 'gameOver',
+                             'id': the_game.id
+                         }
+                     },
+                     multicast=True)
+
+            return resp
         else:
             print("Moving on to next round")
             next_round = the_game.rounds.create(number=cur_round.number+1)
-            # TODO: Send notifications to clients
+
+            fcm.send(to=list(map(lambda p: p.client.token, the_game.player_set.all())),
+                     payload={
+                         'data': {
+                             'action': 'newRound',
+                             'id': the_game.id
+                         }
+                     },
+                     multicast=True)
+
             return Response(status=status.HTTP_200_OK, data={'is_over': False, 'next_round': next_round.number})
     elif only_resolve:
         return APIException('Incomplete round')

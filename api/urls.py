@@ -4,6 +4,7 @@ from . import views
 urlpatterns = [
     url(r'^sync$', views.sync),
     url(r'^friends$', views.friends),
+    url(r'^profile$', views.profile),
     url(r'^games$', views.games),
     url(r'^games/start$', views.start),
     url(r'^games/(?P<pk>\d+)$', views.game),
