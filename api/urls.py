@@ -2,6 +2,7 @@ from django.conf.urls import include, url
 from . import views
 
 urlpatterns = [
+    url(r'^register$', views.register),
     url(r'^sync$', views.sync),
     url(r'^friends$', views.friends),
     url(r'^profile$', views.profile),

@@ -6,6 +6,9 @@ class FirebaseCloudMessaging:
         self.server_key = server_key
 
     def send(self, to, payload, multicast=False):
+        if self.server_key is None:
+            print("No FCM server key, passing")
+            return
 
         json = {}
 

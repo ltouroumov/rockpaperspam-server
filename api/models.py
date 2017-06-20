@@ -1,15 +1,24 @@
 import uuid
-from collections import defaultdict
+from binascii import a2b_hex, b2a_hex
 from datetime import datetime
-from functools import reduce
 from django.db import models
+from .game import Moves, resolve_round, resolve_game
 
 
 class Client(models.Model):
     id = models.UUIDField(primary_key=True)
+    secret = models.TextField(default="00")
     token = models.TextField(blank=True)
     profile = models.ForeignKey(to='Contact', blank=True, null=True)
     contacts = models.ManyToManyField(to='Contact', related_name='friends')
+
+    @property
+    def secret_bytes(self):
+        return a2b_hex(self.secret)
+
+    @secret_bytes.setter
+    def secret_bytes(self, value):
+        self.secret = b2a_hex(value)
 
     @property
     def contacts_by_name(self):
@@ -54,6 +63,29 @@ class Client(models.Model):
             ) friends
             GROUP BY friends.id, friends.profile_id
         ''', [self.id, self.id])
+
+    @property
+    def invites(self):
+        """
+        Find contacts which are NOT a client.
+        :return: Contacts which are NOT a client.
+        """
+
+        return Contact.objects.raw("""
+            SELECT co1.*
+            FROM api_client cl1
+            JOIN api_client_contacts cc1 ON cc1.client_id = cl1.id
+            JOIN api_contact co1 ON co1.id = cc1.contact_id
+            JOIN api_rawcontact rc1 ON rc1.contact_id = co1.id
+            JOIN api_data da1 ON da1.raw_contact_id = rc1.id AND da1.type = 'PHONE'
+            WHERE cl1.id = %s and da1.value not in (
+                select da2.value
+                from api_client cl2
+                join api_contact co2 ON cl2.profile_id = co2.id
+                join api_rawcontact rc2 ON co2.id = rc2.contact_id
+                join api_data da2 ON da2.raw_contact_id = rc2.id and da2.type = 'PHONE'
+            )
+        """, [self.id])
 
     @property
     def games(self):
@@ -158,24 +190,7 @@ class Game(models.Model):
         if not self.over:
             return
 
-        def _reducer(acc, winner):
-            acc[winner] += 1
-            return acc
-
-        winners = list(map(lambda r: r.winner_id, self.rounds.all()))
-        winners = reduce(_reducer, winners, {p: 0 for p in set(winners)})
-
-        winner = None
-        max_score = 0
-        for player, score in winners.items():
-            if score > max_score:
-                # Gather the player with the highest score
-                winner = player
-                max_score = score
-            elif score == max_score:
-                # We have a draw
-                winner = None
-                break
+        winner, _ = resolve_game([(r.number, r.winner_id) for r in self.rounds.all()])
 
         self.winner_id = winner
         self.status = Game.CLOSED
@@ -183,37 +198,14 @@ class Game(models.Model):
         self.save()
 
 
-class Moves:
-    class Move:
-        def __init__(self, name, wins):
-            self.name = name
-            self.wins = wins
-
-    ROCK = 'ROC'
-    PAPER = 'PAP'
-    SCISSORS = 'SIS'
-    LIZARD = 'LIZ'
-    SPOCK = 'SPO'
-    NAMES = {
-        ROCK: 'Rock',
-        PAPER: 'Paper',
-        SCISSORS: 'Scissors',
-        LIZARD: 'Lizard',
-        SPOCK: 'Spock'
-    }
-    WINS = {
-        ROCK: (SCISSORS, LIZARD),
-        PAPER: (ROCK, SPOCK),
-        SCISSORS: (PAPER, LIZARD),
-        LIZARD: (PAPER, SPOCK),
-        SPOCK: (ROCK, SCISSORS)
-    }
-
-
 class Round(models.Model):
     game = models.ForeignKey(to='Game', related_name='rounds', on_delete=models.CASCADE)
     winner = models.ForeignKey(to='Player', related_name='rounds_won', blank=True, null=True)
     number = models.SmallIntegerField(default=0)
+
+    @property
+    def players(self):
+        return [move.player_id for move in self.move_set.all()]
 
     @property
     def complete(self):
@@ -223,21 +215,9 @@ class Round(models.Model):
         return len(diff) == 0
 
     def resolve(self):
-        import itertools
-        moves = self.move_set.all()
-        if len(moves) > 2:
-            raise Exception("Too many moves for this round")
+        winner, _ = resolve_round([(move.player_id, move.move) for move in self.move_set.all()])
 
-        for move1, move2 in itertools.combinations(moves, 2):
-            if move1.move == move2.move:
-                self.winner = None
-            else:
-                print(move1.move, "VS", move2.move)
-                if move2.move in Moves.WINS[move1.move]:
-                    self.winner = move1.player
-                else:
-                    self.winner = move2.player
-
+        self.winner_id = winner
         self.save()
 
     class Meta:

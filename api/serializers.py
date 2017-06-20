@@ -5,7 +5,7 @@ from rest_framework import serializers
 class RoundSerializer(serializers.ModelSerializer):
     class Meta:
         model = Round
-        fields = ('number', 'winner_id')
+        fields = ('number', 'winner_id', 'players')
 
 
 class PlayerSerializer(serializers.ModelSerializer):

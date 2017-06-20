@@ -8,12 +8,37 @@ from django.db.utils import IntegrityError
 from .models import *
 from api.firebase import FirebaseCloudMessaging
 from backend import settings
+import itertools
+from pprint import pprint
+import os
+import logging
 
+logger = logging.getLogger(__name__)
 fcm = FirebaseCloudMessaging(settings.GCM_SERVER_KEY)
 
 
 @api_view(['POST'])
 @permission_classes([permissions.AllowAny])
+def register(request: Request):
+    pprint(request.data)
+
+    client_id = request.data['client_id']
+
+    client = Client(id=client_id)
+    client.profile = Contact()
+    client.secret_bytes = os.urandom(16)
+
+    try:
+        client.profile.save()
+        client.save()
+        return Response(status=status.HTTP_201_CREATED, data={
+            'secret': client.secret
+        })
+    except:
+        return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+@api_view(['POST'])
 def sync(request: Request):
     """
     Synchronizes contact list for a client
@@ -21,10 +46,8 @@ def sync(request: Request):
     :param request:
     :return:
     """
-    from pprint import pprint
 
     data = request.data
-    pprint(data)
     profile_json = data['profile']
 
     try:
@@ -109,19 +132,15 @@ def sync(request: Request):
     })
 
 
-def build_profile(friend):
+def build_profile(ftype, id, profile):
     return {
-        'id': friend.id,
-        'display_name': friend.profile.display_name,
-        'stats': {
-            'global': {'victories': 100, 'defeats': 100},
-            'versus': {'victories': 10, 'defeats': 15}
-        }
+        'id': id,
+        'is_client': ftype,
+        'display_name': profile.display_name
     }
 
 
 @api_view(['GET'])
-@permission_classes([permissions.AllowAny])
 def profile(request: Request):
     client_id = request.GET.get('of')
     try:
@@ -130,13 +149,13 @@ def profile(request: Request):
         from rest_framework.exceptions import NotFound
         raise NotFound()
 
-    return Response(status=status.HTTP_200_OK, data=build_profile(client))
+    return Response(status=status.HTTP_200_OK, data=build_profile(True, client.id, client.profile))
 
 
 @api_view(['GET'])
-@permission_classes([permissions.AllowAny])
 def friends(request: Request):
-    client_id = request.GET.get('of')
+    client_id = request.user.id
+
     try:
         client = Client.objects.get(id=client_id)
     except Client.DoesNotExist:
@@ -145,7 +164,15 @@ def friends(request: Request):
 
     friends_json = {
         'client': {'display_name': client.profile.display_name, 'id': client.id},
-        'friends': list(map(build_profile, client.friends))
+        'friends': list(
+            itertools.starmap(
+                build_profile,
+                itertools.chain(
+                    ((True, f.id, f.profile) for f in client.friends),
+                    ((False, i.id, i) for i in client.invites)
+                )
+            )
+        )
     }
 
     return Response(status=status.HTTP_200_OK, data=friends_json)
@@ -156,15 +183,13 @@ class GameException(APIException):
 
 
 @api_view(['GET'])
-@permission_classes([permissions.AllowAny])
 def games(request: Request):
     from api.serializers import GameSerializer
 
-    if 'of' not in request.GET:
-        raise APIException("Missing client")
+    client_id = request.user.id
 
     try:
-        client = Client.objects.get(id=request.GET.get('of'))
+        client = Client.objects.get(id=client_id)
     except Client.DoesNotExist:
         raise APIException("Client does not exist")
 
@@ -177,7 +202,6 @@ def games(request: Request):
 
 
 @api_view(['GET'])
-@permission_classes([permissions.AllowAny])
 def game(request: Request, pk):
     from api.serializers import GameSerializer
 
@@ -186,16 +210,23 @@ def game(request: Request, pk):
 
 
 @api_view(['POST'])
-@permission_classes([permissions.AllowAny])
 def start(request: Request):
+    challenger = request.data['challenger']
+    defender = request.data['defender']
+
+    print("challenger = {}, defender = {}, user = {}".format(challenger, defender, request.user.id))
+
+    if challenger != str(request.user.id):
+        print("challenger != user")
+        raise APIException('Challenger must be authenticated user')
 
     try:
-        challenger = Client.objects.get(id=request.data['challenger'])
+        challenger = Client.objects.get(id=challenger)
     except Client.DoesNotExist:
         return Response(status=status.HTTP_400_BAD_REQUEST, data={'error': 'Could not find challenger'})
 
     try:
-        defender = Client.objects.get(id=request.data['defender'])
+        defender = Client.objects.get(id=defender)
     except Client.DoesNotExist:
         return Response(status=status.HTTP_400_BAD_REQUEST, data={'error': 'Could not find defender'})
 
@@ -223,7 +254,6 @@ def start(request: Request):
 
 
 @api_view(['POST'])
-@permission_classes([permissions.AllowAny])
 def play(request: Request, pk, rid):
 
     only_resolve = request.GET.get('resolve', 'false') == 'true'
