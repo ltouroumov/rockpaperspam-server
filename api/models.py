@@ -98,7 +98,7 @@ class Client(models.Model):
                 WHERE cl1.id = %s AND cl1.id != cl2.id
             ) friends
             GROUP BY friends.id, friends.profile_id
-        ''', [self.id, self.id, self.id])
+        ''', [self.id, self.id])
 
     @property
     def invites(self):
