@@ -151,7 +151,7 @@ class Energy(models.Model):
         last_level = self.levels.order_by('-time').first()
         if not last_level:
             new_level = self.levels.create(value=self.pool_size)
-            return math.floor(new_level.value)
+            return 0, math.floor(new_level.value), 0
 
         now = datetime.now(tz=last_level.time.tzinfo)
         delta = now - last_level.time
