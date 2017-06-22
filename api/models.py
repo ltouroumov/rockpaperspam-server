@@ -1,16 +1,22 @@
 import uuid
+import math
 from binascii import a2b_hex, b2a_hex
 from datetime import datetime
 from django.db import models
 from .game import Moves, resolve_round, resolve_game
+from django.utils import timezone
+from api.locking import lock_factory
 
 
 class Client(models.Model):
     id = models.UUIDField(primary_key=True)
     secret = models.TextField(default="00")
     token = models.TextField(blank=True)
+    energy = models.ForeignKey(to='Energy', blank=True, null=True)
     profile = models.ForeignKey(to='Contact', blank=True, null=True)
     contacts = models.ManyToManyField(to='Contact', related_name='friends')
+
+    is_staff = models.BooleanField(default=False)
 
     @property
     def secret_bytes(self):
@@ -23,6 +29,33 @@ class Client(models.Model):
     @property
     def contacts_by_name(self):
         return self.contacts.order_by('display_name')
+
+    @property
+    def stats(self):
+        from django.db import connection
+
+        with connection.cursor() as cur:
+            cur.execute('''
+                select count(rs.*), sum(rs.won), sum(rs.lost), sum(rs.draw)
+                from (
+                    select
+                        (case when g1.winner_id = p1.id then 1 else 0 end) as won,
+                        (case when g1.winner_id = p2.id then 1 else 0 end) as lost,
+                        (case when g1.winner_id is null then 1 else 0 end) as draw
+                    from api_game g1
+                    join api_player p1 on p1.game_id = g1.id
+                    join api_player p2 on p2.game_id = g1.id and p2.id != p1.id
+                    where p1.client_id = %s and g1.status = 'C'
+                ) as rs
+            ''', [self.id])
+            row = cur.fetchone()
+
+        return {
+            'played': row[0],
+            'won': row[1] or 0,
+            'lost': row[2] or 0,
+            'draw': row[3] or 0
+        }
 
     @property
     def friends(self):
@@ -101,6 +134,60 @@ class Sync(models.Model):
 
     def __str__(self):
         return "Sync({0.client_id}, {0.date})".format(self)
+
+
+class Energy(models.Model):
+    regen_rate = models.FloatField()  # in points per hour
+    pool_size = models.IntegerField()
+
+    @property
+    def levels_by_time(self):
+        return self.levels.order_by('-time')
+
+    def _compute_current_level(self):
+        last_level = self.levels.order_by('-time').first()
+        if not last_level:
+            new_level = self.levels.create(value=self.pool_size)
+            return math.floor(new_level.value)
+
+        now = datetime.now(tz=last_level.time.tzinfo)
+        delta = now - last_level.time
+        hours = delta.total_seconds() / 3600.0
+        level_inc = hours * self.regen_rate
+        new_level_value = min(last_level.value + level_inc, self.pool_size)
+
+        if (level_inc > 0 and new_level_value <= self.pool_size and hours >= 0.1) or level_inc >= 10 or hours >= 1:
+            self.levels.create(value=new_level_value)
+
+        return level_inc, new_level_value, hours
+
+    @property
+    def _lock_name(self):
+        return "energy-{}".format(self.id)
+
+    @property
+    def current_level(self):
+        with lock_factory.create_lock(self._lock_name):
+            level_inc, new_level_value, hours = self._compute_current_level()
+
+            return math.floor(new_level_value)
+
+    def consume(self, amount):
+        with lock_factory.create_lock(self._lock_name):
+            level_int, new_level_value, hours = self._compute_current_level()
+
+            consumed_value = new_level_value - amount
+            if consumed_value >= 0:
+                self.levels.create(value=consumed_value)
+                return True
+            else:
+                return False
+
+
+class EnergyLevel(models.Model):
+    owner = models.ForeignKey(to='Energy', related_name='levels')
+    time = models.DateTimeField(auto_now_add=True)
+    value = models.IntegerField()
 
 
 class Contact(models.Model):
@@ -194,7 +281,7 @@ class Game(models.Model):
 
         self.winner_id = winner
         self.status = Game.CLOSED
-        self.date_ended = datetime.now()
+        self.date_ended = timezone.now()
         self.save()
 
 

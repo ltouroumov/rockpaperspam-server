@@ -1,0 +1,13 @@
+<dl class="dl-horizontal">
+    {% with stats=client.stats %}
+    <dt>Played</dt>
+    <dd>{{ stats.played }}</dd>
+    <dt>Won</dt>
+    <dd>{{ stats.won }}</dd>
+    <dt>Lost</dt>
+    <dd>{{ stats.lost }}</dd>
+    <dt>Draw</dt>
+    <dd>{{ stats.draw }}</dd>
+    {% endwith %}
+</dl>
+{% include 'backend/games/table.html' with object_list=client.games %}

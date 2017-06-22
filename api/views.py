@@ -5,37 +5,52 @@ from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework import permissions
 from django.db.utils import IntegrityError
+from django.dispatch import Signal
 from .models import *
 from api.firebase import FirebaseCloudMessaging
 from backend import settings
 import itertools
-from pprint import pprint
 import os
-import logging
 
-logger = logging.getLogger(__name__)
 fcm = FirebaseCloudMessaging(settings.GCM_SERVER_KEY)
+on_game_start = Signal(providing_args=['game_id'])
+on_game_play = Signal(providing_args=['game_id', 'round_id'])
 
 
 @api_view(['POST'])
 @permission_classes([permissions.AllowAny])
 def register(request: Request):
-    pprint(request.data)
+    from api.serializers import ClientSerializer
 
     client_id = request.data['client_id']
 
+    if Client.objects.filter(id=client_id).exists():
+        return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR, data={
+            'error': 'Client already registered'
+        })
+
     client = Client(id=client_id)
-    client.profile = Contact()
     client.secret_bytes = os.urandom(16)
 
+    profile = Contact(display_name='You')
+    profile.save()
+
+    energy = Energy(regen_rate=1, pool_size=5)
+    energy.save()
+
     try:
-        client.profile.save()
+        client.profile_id = profile.id
+        client.energy_id = energy.id
         client.save()
         return Response(status=status.HTTP_201_CREATED, data={
-            'secret': client.secret
+            'secret': client.secret,
+            'client': ClientSerializer(client).data
         })
-    except:
-        return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    except Exception as ex:
+        return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR, data={
+            'error': 'Register Error!',
+            'message': str(ex)
+        })
 
 
 @api_view(['POST'])
@@ -130,6 +145,16 @@ def sync(request: Request):
         'deleted_friends': deleted_friends,
         'updated_friends': updated_friends,
     })
+
+
+@api_view(['GET'])
+def client_status(request: Request):
+    from api.serializers import ClientSerializer
+
+    client_id = request.user.id
+    client = Client.objects.get(id=client_id)
+
+    return Response(status=status.HTTP_200_OK, data=ClientSerializer(client).data)
 
 
 def build_profile(ftype, id, profile):
@@ -255,6 +280,7 @@ def start(request: Request):
 
 @api_view(['POST'])
 def play(request: Request, pk, rid):
+    from api.locking import lock_factory
 
     only_resolve = request.GET.get('resolve', 'false') == 'true'
 
@@ -267,56 +293,60 @@ def play(request: Request, pk, rid):
         raise GameException('Game closed')
 
     try:
-        cur_round = the_game.rounds.get(number=rid)
+        the_round = the_game.rounds.get(number=rid)
     except Round.DoesNotExist:
         raise GameException('Invalid round number')
 
-    if not only_resolve:
-        try:
-            player = the_game.player_set.get(client_id=request.data['from'])
-        except Player.DoesNotExist:
-            raise GameException('Invalid player')
+    with lock_factory.create_lock("play-{}-{}".format(the_game.id, the_round.id)):
+        if not only_resolve:
+            try:
+                player = the_game.player_set.get(client_id=request.data['from'])
+            except Player.DoesNotExist:
+                raise GameException('Invalid player')
 
-        try:
-            cur_round.move_set.create(player=player, move=request.data['move'])
-        except IntegrityError:
-            raise GameException('You\'ve already played this round')
-
-    if cur_round.complete:
-        cur_round.resolve()
-        if the_game.over:
-            print("Game is over :)")
-            the_game.resolve()
-            if the_game.winner:
-                resp = Response(status=status.HTTP_200_OK, data={'is_over': True, 'winner': the_game.winner.client.id})
+            if player.client.energy.consume(1):
+                try:
+                    the_round.move_set.create(player=player, move=request.data['move'])
+                except IntegrityError:
+                    raise GameException('You\'ve already played this round')
             else:
-                resp = Response(status=status.HTTP_200_OK, data={'is_over': True, 'winner': None})
+                raise GameException(detail='No energy left', code='no-energy')
 
-            fcm.send(to=list(map(lambda p: p.client.token, the_game.player_set.all())),
-                     payload={
-                         'data': {
-                             'action': 'gameOver',
-                             'id': the_game.id
-                         }
-                     },
-                     multicast=True)
+        if the_round.complete:
+            the_round.resolve()
+            if the_game.over:
+                print("Game is over :)")
+                the_game.resolve()
+                if the_game.winner:
+                    resp = Response(status=status.HTTP_200_OK, data={'is_over': True, 'winner': the_game.winner.client.id})
+                else:
+                    resp = Response(status=status.HTTP_200_OK, data={'is_over': True, 'winner': None})
 
-            return resp
+                fcm.send(to=list(map(lambda p: p.client.token, the_game.player_set.all())),
+                         payload={
+                             'data': {
+                                 'action': 'gameOver',
+                                 'id': the_game.id
+                             }
+                         },
+                         multicast=True)
+
+                return resp
+            else:
+                print("Moving on to next round")
+                next_round = the_game.rounds.create(number=the_round.number+1)
+
+                fcm.send(to=list(map(lambda p: p.client.token, the_game.player_set.all())),
+                         payload={
+                             'data': {
+                                 'action': 'newRound',
+                                 'id': the_game.id
+                             }
+                         },
+                         multicast=True)
+
+                return Response(status=status.HTTP_200_OK, data={'is_over': False, 'next_round': next_round.number})
+        elif only_resolve:
+            return APIException('Incomplete round')
         else:
-            print("Moving on to next round")
-            next_round = the_game.rounds.create(number=cur_round.number+1)
-
-            fcm.send(to=list(map(lambda p: p.client.token, the_game.player_set.all())),
-                     payload={
-                         'data': {
-                             'action': 'newRound',
-                             'id': the_game.id
-                         }
-                     },
-                     multicast=True)
-
-            return Response(status=status.HTTP_200_OK, data={'is_over': False, 'next_round': next_round.number})
-    elif only_resolve:
-        return APIException('Incomplete round')
-    else:
-        return Response(status=status.HTTP_200_OK, data={'is_over': False})
+            return Response(status=status.HTTP_200_OK, data={'is_over': False})

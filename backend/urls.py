@@ -22,6 +22,7 @@ urlpatterns = [
     url(r'^dashboard$', views.dashboard, name='dashboard'),
 
     url(r'^clients$', clients.Index.as_view(), name='clients'),
+    url(r'^clients/_delete$', clients.DeleteMulti.as_view(), name='delete_multi_clients'),
     url(r'^clients/(?P<pk>[a-f0-9\-]+)$', clients.Show.as_view(), name='show_client'),
     url(r'^clients/(?P<pk>[a-f0-9\-]+)/delete$', clients.Delete.as_view(), name='delete_client'),
     url(r'^clients/(?P<pk>[a-f0-9\-]+)/send$', clients.Send.as_view(), name='send_client'),
@@ -36,6 +37,7 @@ urlpatterns = [
 
     url(r'^games$', games.Index.as_view(), name='games'),
     url(r'^games/(?P<pk>\d+)$', games.Show.as_view(), name='show_game'),
+    url(r'^games/(?P<pk>\d+)/delete$', games.Delete.as_view(), name='delete_game'),
 
     url(r'^$',  RedirectView.as_view(url='dashboard', permanent=False), name='home'),
 ]

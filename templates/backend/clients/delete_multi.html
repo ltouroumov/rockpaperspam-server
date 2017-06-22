@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <div class="row">
+        <div class="col-lg-12">
+            <h1 class="page-header"><i class="fa fa-users"></i>Clients</h1>
+        </div>
+        <!-- /.col-lg-12 -->
+    </div>
+    <!-- /.row -->
+    <div class="row">
+        <div class="col-xs-12 col-md-offset-3 col-md-6">
+            <form method="post" class="panel panel-default">
+                {% csrf_token %}
+                {% for client in clients %}
+                    <input type="hidden" name="ids[]" value="{{ client.id }}"/>
+                {% endfor %}
+                <div class="panel-heading">
+                    Are you sure?
+                </div>
+                <div class="panel-body">
+                    Remove <strong>{{ clients | length }}</strong> clients?
+
+                    <ul>
+                        {% for client in clients %}
+                            <li>{{ client.profile.display_name }} ({{ client.id }})</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+                <div class="panel-footer">
+                    <div class="pull-right">
+                        <button class="btn btn-success" name="confirm" value="true" type="submit">Yes</button>
+                        {% if "return" in request.GET %}
+                            {% if request.GET.return == 'show' %}
+                                <a class="btn btn-danger" href="{% url 'show_client' object.id %}">No</a>
+                            {% endif %}
+                        {% else %}
+                            <a class="btn btn-danger" href="{% url 'clients' %}">No</a>
+                        {% endif %}
+                    </div>
+                    <div class="clearfix"></div>
+                </div>
+            </form>
+        </div>
+    </div>
+{% endblock content %}

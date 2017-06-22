@@ -9,4 +9,7 @@ markdown
 django-filter
 django-forms-bootstrap
 requests
-
+django-extensions
+tabulate
+django-jinja
+redlock

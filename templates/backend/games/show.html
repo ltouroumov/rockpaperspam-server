@@ -78,7 +78,7 @@
                                 <td>{{ round.complete }}</td>
                                 <td>
                                 {% for move in round.move_set.all %}
-                                    <span class="move">p{{ move.player_id }} {{ move.move_name }}</span>
+                                    <span class="move">(p{{ move.player_id }}, {{ move.move_name }})</span>
                                 {% endfor %}
                                 </td>
                                 <td>p{{ round.winner_id }}</td>

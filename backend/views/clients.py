@@ -47,6 +47,28 @@ class Delete(LoginRequiredMixin, DeleteView):
     success_url = reverse_lazy('clients')
 
 
+class DeleteMulti(LoginRequiredMixin, TemplateResponseMixin, View):
+    template_name = "backend/clients/delete_multi.html"
+
+    def get(self, request, *args, **kwargs):
+        return redirect('clients')
+
+    def post(self, request, *args, **kwargs):
+        clients = [Client.objects.get(id=cid) for cid in request.POST.getlist('ids[]')]
+
+        confirm = request.POST.get('confirm', 'false')
+        if confirm == 'true':
+            for client in clients:
+                client.delete()
+
+            messages.info(request, "Clients deleted")
+            return redirect('clients')
+        else:
+            return self.render_to_response({
+                'clients': clients
+            })
+
+
 class SendForm(forms.Form):
     notif_title = forms.CharField(
         label="Notification Title",

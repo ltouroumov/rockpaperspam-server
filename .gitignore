@@ -8,3 +8,4 @@ __pycache__/
 env/
 contacts.json
 _data/
+.client_shell_history

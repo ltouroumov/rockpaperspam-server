@@ -22,3 +22,24 @@ class GameSerializer(serializers.ModelSerializer):
     class Meta:
         model = Game
         fields = ('id', 'status', 'date_started', 'date_ended', 'player_set', 'rounds_num', 'rounds', 'current_round', 'winner')
+
+
+class ContactSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Contact
+        fields = ('id', 'display_name')
+
+
+class EnergySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Energy
+        fields = ('pool_size', 'regen_rate', 'current_level')
+
+
+class ClientSerializer(serializers.ModelSerializer):
+    profile = ContactSerializer()
+    energy = EnergySerializer()
+
+    class Meta:
+        model = Client
+        fields = ('id', 'profile', 'stats', 'energy')

@@ -1,0 +1,26 @@
+<dl class="dl-horizontal">
+    <dt>Pool Size</dt>
+    <dd>{{ client.energy.pool_size }}</dd>
+    <dt>Regen Rate</dt>
+    <dd>{{ client.energy.regen_rate }}</dd>
+    <dt>Current Level</dt>
+    <dd>{{ client.energy.current_level }}</dd>
+</dl>
+
+<div id="energy-graph" style="width:100%"></div>
+
+<script type="text/javascript">
+    $(function() {
+        Morris.Area({
+            element: 'energy-graph',
+            data: [
+                {% for level in client.energy.levels_by_time %}
+                    { time: "{{ level.time.isoformat }}", value: {{ level.value }} },
+                {% endfor %}
+            ],
+            xkey: 'time',
+            ykeys: ['value'],
+            labels: ['value']
+        })
+    });
+</script>

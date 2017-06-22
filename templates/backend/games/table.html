@@ -5,7 +5,8 @@
             <th>Players</th>
             <th>Rounds</th>
             <th>Status</th>
-            <td width="75">&nbsp;</td>
+            <th>Date Started</th>
+            <td width="150">&nbsp;</td>
         </tr>
     </thead>
     <tbody>
@@ -21,15 +22,14 @@
             </td>
             <td>{{ game.rounds_num }}</td>
             <td>{{ game.status }}</td>
+            <td>{{ game.date_started }}</td>
             <td class="actions-cell">
                 <a class="btn btn-default" href="{% url 'show_game' game.id %}">
                     <i class="fa fa-eye"></i> Show
                 </a>
-                {% comment %}
-                <a class="btn btn-danger" href="{% url 'delete_endpoint' endpoint.id %}">
+                <a class="btn btn-danger" href="{% url 'delete_game' game.id %}">
                     <i class="fa fa-trash"></i>
                 </a>
-                {% endcomment %}
             </td>
         </tr>
     {% endfor %}

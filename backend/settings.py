@@ -10,6 +10,8 @@ SECRET_KEY = os.environ.get("SECRET_KEY", "".join(random.choice(string.printable
 GCM_SERVER_KEY = os.environ.get("GCM_SERVER_KEY", None)
 DEBUG = os.environ.get("DEBUG", False)
 
+REDIS_URL = os.environ.get('REDIS_URL', 'redis://localhost:6379')
+
 # Application definition
 INSTALLED_APPS = (
     'django.contrib.admin',
@@ -22,7 +24,9 @@ INSTALLED_APPS = (
     'backend',
     'api',
     'django_forms_bootstrap',
-    'rest_framework'
+    'rest_framework',
+    'django_extensions',
+    'django_jinja',
 )
 
 MIDDLEWARE_CLASSES = (
@@ -40,6 +44,14 @@ ROOT_URLCONF = 'backend.urls'
 LOGIN_URL = '/login'
 
 TEMPLATES = (
+    # {
+    #     "BACKEND": "django_jinja.backend.Jinja2",
+    #     'DIRS': [os.path.join(BASE_DIR, 'templates')],
+    #     "APP_DIRS": True,
+    #     "OPTIONS": {
+    #         "match_extension": ".html",
+    #     }
+    # },
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
         'DIRS': [os.path.join(BASE_DIR, 'templates')],
@@ -119,7 +131,7 @@ CHANNEL_LAYERS = {
     "default": {
         "BACKEND": "asgi_redis.RedisChannelLayer",
         "CONFIG": {
-            "hosts": [os.environ.get('REDIS_URL', 'redis://localhost:6379')],
+            "hosts": [REDIS_URL],
         },
         "ROUTING": "backend.routing.channel_routing",
     },

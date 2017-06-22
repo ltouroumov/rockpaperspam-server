@@ -10,6 +10,9 @@ class Index(LoginRequiredMixin, ListView):
     template_name = "backend/games/index.html"
     paginate_by = 25
 
+    def get_queryset(self):
+        return super().get_queryset().order_by('-date_started')
+
 
 class Show(LoginRequiredMixin, DetailView):
     model = Game

@@ -3,6 +3,7 @@ from . import views
 
 urlpatterns = [
     url(r'^register$', views.register),
+    url(r'^status', views.client_status),
     url(r'^sync$', views.sync),
     url(r'^friends$', views.friends),
     url(r'^profile$', views.profile),

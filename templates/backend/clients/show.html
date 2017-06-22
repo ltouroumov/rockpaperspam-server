@@ -80,6 +80,9 @@
                 <li {% if tab_name == 'syncs' %}class="active"{% endif %}>
                     <a href="?tab=syncs"><i class="fa fa-refresh"></i> Syncs</a>
                 </li>
+                <li {% if tab_name == 'energy' %}class="active"{% endif %}>
+                    <a href="?tab=energy"><i class="fa fa-bolt"></i> Energy</a>
+                </li>
             </ul>
                 </div>
                 <div class="panel-body">
@@ -88,9 +91,11 @@
                 {% elif tab_name == 'friends' %}
                     {% include 'backend/clients/show_friends.html' with client=client %}
                 {% elif tab_name == 'games' %}
-                    {% include 'backend/games/table.html' with object_list=client.games %}
+                    {% include 'backend/clients/show_games.html' with client=client %}
                 {% elif tab_name == 'syncs' %}
                     {% include 'backend/clients/show_syncs.html' with client=client %}
+                {% elif tab_name == 'energy' %}
+                    {% include 'backend/clients/show_energy.html' with client=client %}
                 {% else %}
                     <strong>Unkown tab</strong>
                 {% endif %}
