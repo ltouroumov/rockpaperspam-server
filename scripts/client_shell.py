@@ -1,4 +1,5 @@
 from api.models import *
+from api.game import perform_resolve
 import shlex
 import readline
 import atexit
@@ -15,7 +16,6 @@ class RepeatingArgumentParser(ArgumentParser):
         raise ParserError(message)
 
 
-
 def setup_parser():
     parser = RepeatingArgumentParser(add_help=False)
     subparsers = parser.add_subparsers(dest='command')
@@ -26,8 +26,10 @@ def setup_parser():
     setup_cmd.add_argument('client_id', nargs='?', default=None, help='Sets the client ID')
 
     register_cmd = subparsers.add_parser('register', help='Registers client')
-    register_cmd.add_argument('display_name')
-    register_cmd.add_argument('phone')
+    register_cmd.add_argument('display_name', help='Client\'s name')
+    register_cmd.add_argument('phone', help='Client\'s phone number')
+    register_cmd.add_argument('--bot', action='store_true', default=False, help='Makes the user a bot')
+    register_cmd.add_argument('--energy', default='1:5', help='Energy parameters')
 
     profile_cmd = subparsers.add_parser('profile', help='Show currently loaded profile')
     profile_cmd.add_argument('--client-id', default=None, help='ID of the profile to show')
@@ -36,7 +38,7 @@ def setup_parser():
 
     game_cmd = subparsers.add_parser('game', help='Show game detail')
     game_cmd.add_argument('game_id')
-    game_cmd.add_argument('--delete', action='store_true', default=False)
+    game_cmd.add_argument('--delete', action='store_true', default=False, help='Delete the game after showing info')
 
     start_cmd = subparsers.add_parser('start', help='Start a game')
     start_cmd.add_argument('versus')
@@ -81,7 +83,11 @@ class Context:
         profile_raw.data.create(type='PHONE', value=args.phone)
         client.profile = profile
 
-        client.energy = Energy(pool_size=50, regen_rate=5)
+        if args.bot:
+            client.is_bot = True
+
+        pool_size, regen_rate = args.energy.split(':')
+        client.energy = Energy(pool_size=pool_size, regen_rate=regen_rate)
         client.energy.save()
 
         client.save()
@@ -162,20 +168,15 @@ class Context:
 
     def play_handler(self, args):
         game = Game.objects.get(id=args.game_id)
-        player = game.player_set.get(client=self.client)
-        rnd = game.rounds.get(number=game.current_round)
-        rnd.move_set.create(player=player, move=args.move)
+        if not game.over:
+            player = game.player_set.get(client=self.client)
+            rnd = game.rounds.get(number=game.current_round)
+            rnd.move_set.create(player=player, move=args.move)
 
-        print("Made Move")
+            print("Made Move")
 
-        if rnd.complete:
-            print("Resolved Round")
-            rnd.resolve()
-            game.rounds.create(number=rnd.number + 1)
-
-            if game.over:
-                print("Resolved Game")
-                game.resolve()
+            round_complete, game_complete = perform_resolve(game, rnd)
+            print("Round: {}, Game: {}".format(round_complete, game_complete))
 
 
 HANDLERS = {

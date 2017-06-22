@@ -77,6 +77,21 @@ def resolve_game(rounds):
     return find_winner(winners, scores)
 
 
+def perform_resolve(the_game, the_round):
+    if the_round.complete:
+        the_round.resolve()
+        if the_game.over:
+            print("Game is over :)")
+            the_game.resolve()
+            return True, True
+        else:
+            print("Moving on to next round")
+            the_game.rounds.create(number=the_round.number + 1)
+            return True, False
+    else:
+        return False, False
+
+
 if __name__ == '__main__':
     import unittest
 

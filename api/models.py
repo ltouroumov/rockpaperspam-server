@@ -17,6 +17,7 @@ class Client(models.Model):
     contacts = models.ManyToManyField(to='Contact', related_name='friends')
 
     is_staff = models.BooleanField(default=False)
+    is_bot = models.BooleanField(default=False)
 
     @property
     def secret_bytes(self):
@@ -272,6 +273,10 @@ class Game(models.Model):
     @property
     def over(self):
         return self.rounds.count() == self.rounds_num
+
+    @property
+    def has_bot(self):
+        return self.player_set.filter(client__is_bot=True).count() > 0
 
     def resolve(self):
         if not self.over:

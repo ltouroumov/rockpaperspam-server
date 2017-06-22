@@ -5,16 +5,15 @@ from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework import permissions
 from django.db.utils import IntegrityError
-from django.dispatch import Signal
 from .models import *
 from api.firebase import FirebaseCloudMessaging
+from api.signals import *
+from api.game import perform_resolve
 from backend import settings
 import itertools
 import os
 
 fcm = FirebaseCloudMessaging(settings.GCM_SERVER_KEY)
-on_game_start = Signal(providing_args=['game_id'])
-on_game_play = Signal(providing_args=['game_id', 'round_id'])
 
 
 @api_view(['POST'])
@@ -194,7 +193,8 @@ def friends(request: Request):
                 build_profile,
                 itertools.chain(
                     ((True, f.id, f.profile) for f in client.friends),
-                    ((False, i.id, i) for i in client.invites)
+                    ((False, i.id, i) for i in client.invites),
+                    ((True, b.id, b.profile) for b in Client.objects.filter(is_bot=True))
                 )
             )
         )
@@ -275,7 +275,43 @@ def start(request: Request):
              },
              multicast=True)
 
+    on_game_start.send(sender='start', game_id=the_game.id)
+
     return Response(status=status.HTTP_201_CREATED, data={'id': the_game.id})
+
+
+def process_resolve(round_complete, game_complete, the_game, the_round):
+    if round_complete:
+        if game_complete:
+            if the_game.winner:
+                resp = Response(status=status.HTTP_200_OK, data={'is_over': True, 'winner': the_game.winner.client.id})
+            else:
+                resp = Response(status=status.HTTP_200_OK, data={'is_over': True, 'winner': None})
+
+            fcm.send(to=list(map(lambda p: p.client.token, the_game.player_set.all())),
+                     payload={
+                         'data': {
+                             'action': 'gameOver',
+                             'id': the_game.id
+                         }
+                     },
+                     multicast=True)
+
+        else:
+            fcm.send(to=list(map(lambda p: p.client.token, the_game.player_set.all())),
+                     payload={
+                         'data': {
+                             'action': 'newRound',
+                             'id': the_game.id
+                         }
+                     },
+                     multicast=True)
+
+            resp = Response(status=status.HTTP_200_OK, data={'is_over': False})
+    else:
+        resp = Response(status=status.HTTP_200_OK, data={'is_over': False})
+
+    return resp
 
 
 @api_view(['POST'])
@@ -312,41 +348,10 @@ def play(request: Request, pk, rid):
             else:
                 raise GameException(detail='No energy left', code='no-energy')
 
-        if the_round.complete:
-            the_round.resolve()
-            if the_game.over:
-                print("Game is over :)")
-                the_game.resolve()
-                if the_game.winner:
-                    resp = Response(status=status.HTTP_200_OK, data={'is_over': True, 'winner': the_game.winner.client.id})
-                else:
-                    resp = Response(status=status.HTTP_200_OK, data={'is_over': True, 'winner': None})
+        round_complete, game_complete = perform_resolve(the_game, the_round)
+        resp = process_resolve(round_complete, game_complete, the_game, the_round)
 
-                fcm.send(to=list(map(lambda p: p.client.token, the_game.player_set.all())),
-                         payload={
-                             'data': {
-                                 'action': 'gameOver',
-                                 'id': the_game.id
-                             }
-                         },
-                         multicast=True)
+        if not only_resolve:
+            on_game_play.send(sender='play', game_id=the_game.id, round_id=the_round.id)
 
-                return resp
-            else:
-                print("Moving on to next round")
-                next_round = the_game.rounds.create(number=the_round.number+1)
-
-                fcm.send(to=list(map(lambda p: p.client.token, the_game.player_set.all())),
-                         payload={
-                             'data': {
-                                 'action': 'newRound',
-                                 'id': the_game.id
-                             }
-                         },
-                         multicast=True)
-
-                return Response(status=status.HTTP_200_OK, data={'is_over': False, 'next_round': next_round.number})
-        elif only_resolve:
-            return APIException('Incomplete round')
-        else:
-            return Response(status=status.HTTP_200_OK, data={'is_over': False})
+        return resp
