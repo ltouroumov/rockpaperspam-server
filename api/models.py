@@ -121,6 +121,7 @@ class Client(models.Model):
                 join api_rawcontact rc2 ON co2.id = rc2.contact_id
                 join api_data da2 ON da2.raw_contact_id = rc2.id and da2.type = 'PHONE'
             )
+            GROUP BY co1.id
         """, [self.id])
 
     @property
