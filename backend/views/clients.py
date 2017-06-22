@@ -23,12 +23,13 @@ class Index(LoginRequiredMixin, ListView):
     paginate_by = 25
 
     def get_queryset(self):
+        qs = super().get_queryset().order_by('creation_date', 'id')
         if "q" in self.request.GET:
             q = self.request.GET['q']
             if len(q) > 0:
-                return Client.objects.filter(profile__display_name__icontains=q)
+                qs = qs.filter(profile__display_name__icontains=q)
 
-        return super().get_queryset()
+        return qs
 
 
 class Show(LoginRequiredMixin, DetailView):

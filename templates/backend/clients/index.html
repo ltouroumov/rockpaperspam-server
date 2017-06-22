@@ -51,7 +51,10 @@
                         <td>
                             <input type="checkbox" name="ids[]" value="{{ client.id }}"/>
                         </td>
-                        <td><a href="{% url 'show_client' client.id %}">{{ client.profile.display_name }}</a></td>
+                        <td><a href="{% url 'show_client' client.id %}">
+                            {{ client.profile.display_name }}
+                            {% if client.is_bot %}<i class="fa fa-android"></i>{% endif %}
+                        </a></td>
                         <td><a href="{% url 'show_client' client.id %}">{{ client.id }}</a></td>
                         <td>{{ client | last_sync }}</td>
                         <td class="actions-cell">

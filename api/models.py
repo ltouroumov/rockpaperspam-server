@@ -19,6 +19,8 @@ class Client(models.Model):
     is_staff = models.BooleanField(default=False)
     is_bot = models.BooleanField(default=False)
 
+    creation_date = models.DateTimeField(auto_now_add=True)
+
     @property
     def secret_bytes(self):
         return a2b_hex(self.secret)
