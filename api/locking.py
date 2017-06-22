@@ -1,6 +1,3 @@
-from backend import settings
-from redlock import RedLockFactory
-
 
 def parse_redis_url(url):
     from urllib.parse import urlparse, parse_qs
@@ -16,15 +13,26 @@ def parse_redis_url(url):
     if path:
         db = int(path)
     elif 'db' in query:
-        db = int(query['db'])
+        db = int(query['db'][0])
     else:
         db = 0
 
-    return {
+    options = {
         'host': parsed.hostname,
         'port': parsed.port,
         'db': db
     }
 
+    if parsed.password:
+        options['password'] = parsed.password
 
-lock_factory = RedLockFactory(connection_details=[parse_redis_url(settings.REDIS_URL)])
+    return options
+
+if __name__ == '__main__':
+    redis_url = 'redis://username:password@host:1234/?db=1'
+    print(parse_redis_url(redis_url))
+else:
+    from backend import settings
+    from redlock import RedLockFactory
+
+    lock_factory = RedLockFactory(connection_details=[parse_redis_url(settings.REDIS_URL)])
