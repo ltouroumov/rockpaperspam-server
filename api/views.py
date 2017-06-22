@@ -46,6 +46,8 @@ def register(request: Request):
             'client': ClientSerializer(client).data
         })
     except Exception as ex:
+        import traceback
+        traceback.print_exc()
         return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR, data={
             'error': 'Register Error!',
             'message': str(ex)
