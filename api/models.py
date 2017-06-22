@@ -83,7 +83,7 @@ class Client(models.Model):
                 JOIN api_rawcontact rc2 ON rc2.id = da2.raw_contact_id
                 JOIN api_contact co2 ON co2.id = rc2.contact_id
                 JOIN api_client cl2 ON cl2.profile_id = co2.id
-                WHERE cl1.id = %s
+                WHERE cl1.id = %s AND cl1.id != cl2.id
                 UNION 
                 SELECT 'R' as side, cl2.*
                 FROM api_client cl1
@@ -95,10 +95,9 @@ class Client(models.Model):
                 JOIN api_contact co2 ON co2.id = rc2.contact_id
                 JOIN api_client_contacts cc2 ON cc2.contact_id = co2.id
                 JOIN api_client cl2 ON cl2.id = cc2.client_id
-                WHERE cl1.id = %s
+                WHERE cl1.id = %s AND cl1.id != cl2.id
             ) friends
             GROUP BY friends.id, friends.profile_id
-            HAVING friends.profile_id != %s
         ''', [self.id, self.id, self.id])
 
     @property
