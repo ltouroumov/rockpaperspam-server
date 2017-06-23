@@ -183,7 +183,7 @@ class Clone(LoginRequiredMixin, TemplateResponseMixin, View):
 
     def get(self, request, pk, cid, *args, **kwargs):
         client = Client.objects.get(id=pk)
-        contact = client.friends.get(id=cid)
+        contact = client.contacts.get(id=cid)
 
         return self.render_to_response({
             'client': client,
@@ -193,7 +193,7 @@ class Clone(LoginRequiredMixin, TemplateResponseMixin, View):
 
     def post(self, request, pk, cid, *args, **kwargs):
         client = Client.objects.get(id=pk)
-        contact = client.friends.get(id=cid)
+        contact = client.contacts.get(id=cid)
 
         form = CloneForm(request.POST)
         if form.is_valid():
