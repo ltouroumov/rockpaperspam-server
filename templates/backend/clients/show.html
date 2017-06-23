@@ -65,6 +65,23 @@
                     </a>
                 </div>
             </div>
+            <div class="panel panel-default">
+                <div class="panel-heading">
+                    <i class="fa fa-key"></i> Secret
+                </div>
+                <div class="panel-body">
+                    <div class="input-group">
+                        <!-- Target -->
+                        <input class="form-control" id="client-secret" value="{{ client.secret }}">
+                        <div class="input-group-btn">
+                            <!-- Trigger -->
+                            <button class="btn btn-default btn-copy" data-clipboard-target="#client-secret">
+                                <i class="fa fa-clipboard"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
         <div class="col-md-8">
             <div class="panel panel-default">
