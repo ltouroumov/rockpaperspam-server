@@ -4,13 +4,13 @@ from django import forms
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.shortcuts import redirect
-from django.urls import reverse_lazy
-from django.views.generic import View, DetailView, ListView, DeleteView, FormView
+from django.urls import reverse_lazy, reverse
+from django.views.generic import View, DetailView, ListView, DeleteView, UpdateView, FormView
 from django.views.generic.base import TemplateResponseMixin
 from django.views.generic.detail import SingleObjectMixin
 
 from api.firebase import FirebaseCloudMessaging
-from api.models import Client, Contact
+from api.models import Client, Contact, Energy
 from backend import settings
 from backend.models import Endpoint
 from backend.utils import ModelChoiceFieldWithLabel
@@ -40,6 +40,25 @@ class Show(LoginRequiredMixin, DetailView):
         return super().get_context_data(
             tab_name=self.request.GET.get('tab', 'contacts')
         )
+
+
+class EditEnergy(LoginRequiredMixin, UpdateView):
+    model = Energy
+    fields = ['pool_size', 'regen_rate']
+    template_name = "backend/clients/form_energy.html"
+
+    def get_object(self, queryset=None):
+        if not queryset:
+            queryset = super().get_queryset()
+
+        pk = self.kwargs.get('pk')
+        queryset = queryset.filter(client__id=pk)
+
+        obj = queryset.get()
+        return obj
+
+    def get_success_url(self):
+        return reverse('show_client', args=(self.object.client.id,)) + "?tab=energy"
 
 
 class Create(LoginRequiredMixin, FormView):

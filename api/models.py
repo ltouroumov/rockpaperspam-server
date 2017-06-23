@@ -12,7 +12,7 @@ class Client(models.Model):
     id = models.UUIDField(primary_key=True)
     secret = models.TextField(default="00")
     token = models.TextField(blank=True)
-    energy = models.ForeignKey(to='Energy', blank=True, null=True)
+    energy = models.OneToOneField(to='Energy', blank=True, null=True)
     profile = models.ForeignKey(to='Contact', blank=True, null=True)
     contacts = models.ManyToManyField(to='Contact', related_name='friends')
 

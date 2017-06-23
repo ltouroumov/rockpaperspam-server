@@ -7,4 +7,3 @@ class CreateClientForm(forms.Form):
 
     is_staff = forms.BooleanField(initial=False, required=False)
     is_bot = forms.BooleanField(initial=False, required=False)
-
