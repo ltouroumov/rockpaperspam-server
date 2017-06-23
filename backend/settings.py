@@ -11,7 +11,6 @@ GCM_SERVER_KEY = os.environ.get("GCM_SERVER_KEY", None)
 DEBUG = os.environ.get("DEBUG", False)
 
 REDIS_URL = os.environ.get('REDIS_URL', 'redis://localhost:6379')
-print("REDIS_URL", REDIS_URL)
 
 # Application definition
 INSTALLED_APPS = (
