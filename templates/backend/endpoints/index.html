@@ -11,9 +11,9 @@
         <!-- /.col-lg-12 -->
     </div>
 
-    <div class="row row-spaced">
+    <div class="row">
         <div class="col-xs-12 col-md-4">
-            <form method="get">
+            <form method="get" class="tools">
                 <div class="input-group">
                     <div class="input-group-addon">
                         <i class="fa fa-search"></i>
@@ -26,9 +26,11 @@
             </form>
         </div>
         <div class="col-xs-12 col-md-8">
-            <a class="btn btn-success pull-right" href="{% url 'new_endpoint' %}">
-                <i class="fa fa-plus-circle"></i> New Endpoint
-            </a>
+            <div class="pull-right tools">
+                <a class="btn btn-success" href="{% url 'new_endpoint' %}">
+                    <i class="fa fa-plus-circle"></i> New Endpoint
+                </a>
+            </div>
             <div class="clearfix"></div>
         </div>
     </div>

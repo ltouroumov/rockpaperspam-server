@@ -5,16 +5,16 @@ from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.shortcuts import redirect
 from django.urls import reverse_lazy
-from django.views.generic import DeleteView
-from django.views.generic import View, DetailView, ListView
+from django.views.generic import View, DetailView, ListView, DeleteView, FormView
 from django.views.generic.base import TemplateResponseMixin
 from django.views.generic.detail import SingleObjectMixin
 
 from api.firebase import FirebaseCloudMessaging
-from api.models import Client
+from api.models import Client, Contact
 from backend import settings
 from backend.models import Endpoint
 from backend.utils import ModelChoiceFieldWithLabel
+from backend.forms import CreateClientForm
 
 
 class Index(LoginRequiredMixin, ListView):
@@ -40,6 +40,31 @@ class Show(LoginRequiredMixin, DetailView):
         return super().get_context_data(
             tab_name=self.request.GET.get('tab', 'contacts')
         )
+
+
+class Create(LoginRequiredMixin, FormView):
+    form_class = CreateClientForm
+    template_name = "backend/clients/form.html"
+    success_url = reverse_lazy('clients')
+
+    def form_valid(self, form):
+        import uuid
+
+        client = Client(id=uuid.uuid4())
+        client.is_staff = form.cleaned_data['is_staff']
+        client.is_bot = form.cleaned_data['is_bot']
+
+        profile = Contact.objects.create(contact_id=0, contact_key='profile',
+                                         display_name=form.cleaned_data['display_name'])
+        profile_raw = profile.raw_contacts.create(contact_type='com.android.profile',
+                                                  contact_name='Profile')
+        profile_raw.data.create(type='NAME', value=form.cleaned_data['display_name'])
+        profile_raw.data.create(type='PHONE', value=form.cleaned_data['phone_number'])
+        client.profile = profile
+
+        client.save()
+
+        return super().form_valid(form)
 
 
 class Delete(LoginRequiredMixin, DeleteView):
