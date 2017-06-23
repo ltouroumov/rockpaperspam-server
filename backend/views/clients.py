@@ -143,7 +143,7 @@ class Send(LoginRequiredMixin, SingleObjectMixin, TemplateResponseMixin, View):
                     'body': form.cleaned_data['notif_body']
                 }
 
-            firebase.send(to=object.token, **args)
+            firebase.send(to=object.token, payload=args)
             messages.info(request, "Notification Sent")
         else:
             messages.error(request, "Form is not valid")
