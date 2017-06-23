@@ -195,8 +195,8 @@ def friends(request: Request):
                 build_profile,
                 itertools.chain(
                     ((True, f.id, f.profile) for f in client.friends),
+                    ((True, b.id, b.profile) for b in Client.objects.filter(is_bot=True)),
                     ((False, i.id, i) for i in client.invites),
-                    ((True, b.id, b.profile) for b in Client.objects.filter(is_bot=True))
                 )
             )
         )
