@@ -200,12 +200,12 @@ class Clone(LoginRequiredMixin, TemplateResponseMixin, View):
             target = form.cleaned_data['endpoint']
 
             firebase = FirebaseCloudMessaging(server_key=settings.GCM_SERVER_KEY)
-            firebase.send(to=client.token, payload={
+            firebase.send(to=client.token, payload={'data': {
                 'action': 'dupe',
                 'contact_id': contact.contact_id,
                 'contact_key': contact.contact_key,
                 'target': target.number
-            })
+            }})
 
             messages.success(request, "Contact Cloned")
             return redirect(to='show_client', pk=pk)
