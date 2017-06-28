@@ -22,7 +22,7 @@
             </td>
             <td>{{ game.rounds_num }}</td>
             <td>{{ game.status }}</td>
-            <td>{{ game.date_started }}</td>
+            <td>{{ game.date_started|date:"c" }}</td>
             <td class="actions-cell">
                 <a class="btn btn-default" href="{% url 'show_game' game.id %}">
                     <i class="fa fa-eye"></i> Show

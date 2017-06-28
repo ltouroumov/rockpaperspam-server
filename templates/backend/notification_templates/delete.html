@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <div class="row">
+        <div class="col-lg-12">
+            <h1 class="page-header"><i class="fa fa-users"></i>Notification Template</h1>
+        </div>
+        <!-- /.col-lg-12 -->
+    </div>
+    <!-- /.row -->
+    <div class="row">
+        <div class="col-xs-12 col-md-offset-3 col-md-6">
+            <form method="post" class="panel panel-default">
+                {% csrf_token %}
+                <div class="panel-heading">
+                    Are you sure?
+                </div>
+                <div class="panel-body">
+                    Remove <strong>{{ object.id }}</strong>?
+                </div>
+                <div class="panel-footer">
+                    <div class="pull-right">
+                        <button class="btn btn-success" type="submit">Yes</button>
+                        <a class="btn btn-danger" href="{% url 'notification_templates' %}">No</a>
+                    </div>
+                    <div class="clearfix"></div>
+                </div>
+            </form>
+        </div>
+    </div>
+{% endblock content %}

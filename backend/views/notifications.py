@@ -1,9 +1,11 @@
 from datetime import datetime, timedelta
 
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.urls import reverse_lazy
 from django.views.generic import ListView, FormView, CreateView
 
 from api.models import Notification
+from backend.forms import NotificationForm
 
 
 class Index(LoginRequiredMixin, ListView):
@@ -35,7 +37,6 @@ class Index(LoginRequiredMixin, ListView):
 
             syncs = qs.objects.filter(when__gte=end_time, when__lte=start_time)
         else:
-            print("All syncs ...")
             syncs = qs.all()
 
         return syncs.order_by('-when')
@@ -43,5 +44,6 @@ class Index(LoginRequiredMixin, ListView):
 
 class Send(LoginRequiredMixin, CreateView):
     model = Notification
-    fields = ['client', 'template', 'title_args', 'body_args']
+    form_class = NotificationForm
     template_name = "backend/notifications/form.html"
+    success_url = reverse_lazy('notifications')

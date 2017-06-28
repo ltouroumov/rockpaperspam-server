@@ -10,7 +10,14 @@
 
     <div class="row">
         <div class="col-xs-12">
-            <div class="pull-right">{% include "backend/pagination.html" %}</div>
+            <div class="pull-right">
+                <div class="tools">
+                    <a class="btn btn-success" href="{% url 'send_notification' %}">
+                        <i class="fa fa-send"></i> Send Notification
+                    </a>
+                </div>
+                {% include "backend/pagination.html" %}
+            </div>
         </div>
     </div>
     <!-- /.row -->
@@ -38,7 +45,7 @@
                             </a>
                         </td>
                         <td>{{ notif.template.id }}</td>
-                        <td>{{ notif.when }}</td>
+                        <td>{{ notif.when|date:"c" }}</td>
                         <td>
                             {% if notif.read %}
                                 <i class="fa fa-check text-success"></i>
@@ -46,6 +53,7 @@
                                 <i class="fa fa-times text-danger"></i>
                             {% endif %}
                         </td>
+                        <td></td>
                     </tr>
                 {% endfor %}
                 </tbody>

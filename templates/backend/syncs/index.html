@@ -32,7 +32,7 @@
                                 <small>{{ sync.client_id }}</small>
                             </a>
                         </td>
-                        <td>{{ sync.date }}</td>
+                        <td>{{ sync.date|date:"c" }}</td>
                     </tr>
                 {% endfor %}
                 </tbody>
