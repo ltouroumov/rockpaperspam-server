@@ -24,9 +24,4 @@ class Migration(migrations.Migration):
             field=models.DateTimeField(auto_now_add=True, default=django.utils.timezone.now),
             preserve_default=False,
         ),
-        migrations.AlterField(
-            model_name='move',
-            name='move',
-            field=models.CharField(choices=[('PAP', 'Paper'), ('SIS', 'Scissors'), ('ROC', 'Rock'), ('LIZ', 'Lizard'), ('SPO', 'Spock')], max_length=3),
-        ),
     ]

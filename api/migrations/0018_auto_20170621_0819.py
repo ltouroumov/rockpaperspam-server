@@ -17,9 +17,4 @@ class Migration(migrations.Migration):
             name='is_staff',
             field=models.BooleanField(default=False),
         ),
-        migrations.AlterField(
-            model_name='move',
-            name='move',
-            field=models.CharField(choices=[('SPO', 'Spock'), ('LIZ', 'Lizard'), ('PAP', 'Paper'), ('ROC', 'Rock'), ('SIS', 'Scissors')], max_length=3),
-        ),
     ]

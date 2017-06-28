@@ -17,9 +17,4 @@ class Migration(migrations.Migration):
             name='secret',
             field=models.TextField(default='00'),
         ),
-        migrations.AlterField(
-            model_name='move',
-            name='move',
-            field=models.CharField(choices=[('LIZ', 'Lizard'), ('SPO', 'Spock'), ('ROC', 'Rock'), ('PAP', 'Paper'), ('SIS', 'Scissors')], max_length=3),
-        ),
     ]

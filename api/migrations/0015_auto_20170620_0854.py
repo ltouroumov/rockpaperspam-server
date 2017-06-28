@@ -30,11 +30,6 @@ class Migration(migrations.Migration):
                 ('owner', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='levels', to='api.Energy')),
             ],
         ),
-        migrations.AlterField(
-            model_name='move',
-            name='move',
-            field=models.CharField(choices=[('SIS', 'Scissors'), ('ROC', 'Rock'), ('LIZ', 'Lizard'), ('PAP', 'Paper'), ('SPO', 'Spock')], max_length=3),
-        ),
         migrations.AddField(
             model_name='client',
             name='energy',

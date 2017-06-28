@@ -342,11 +342,11 @@ class Round(models.Model):
 
 class Move(models.Model):
     MOVES = (
+        ('ROC', 'Rock'),
+        ('PAP', 'Paper'),
+        ('SIS', 'Scissors'),
         ('LIZ', 'Lizard'),
         ('SPO', 'Spock'),
-        ('SIS', 'Scissors'),
-        ('ROC', 'Rock'),
-        ('PAP', 'Paper')
     )
 
     round = models.ForeignKey(to='Round', on_delete=models.CASCADE)

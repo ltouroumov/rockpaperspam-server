@@ -17,9 +17,4 @@ class Migration(migrations.Migration):
             name='is_bot',
             field=models.BooleanField(default=False),
         ),
-        migrations.AlterField(
-            model_name='move',
-            name='move',
-            field=models.CharField(choices=[('LIZ', 'Lizard'), ('PAP', 'Paper'), ('SPO', 'Spock'), ('ROC', 'Rock'), ('SIS', 'Scissors')], max_length=3),
-        ),
     ]

@@ -18,9 +18,4 @@ class Migration(migrations.Migration):
             name='energy',
             field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, to='api.Energy'),
         ),
-        migrations.AlterField(
-            model_name='move',
-            name='move',
-            field=models.CharField(choices=[('SIS', 'Scissors'), ('LIZ', 'Lizard'), ('SPO', 'Spock'), ('ROC', 'Rock'), ('PAP', 'Paper')], max_length=3),
-        ),
     ]

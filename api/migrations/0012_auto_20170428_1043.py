@@ -9,7 +9,7 @@ import django.db.models.deletion
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('api', '0011_auto_20170428_0937'),
+        ('api', '0010_auto_20170427_1333'),
     ]
 
     operations = [
@@ -17,11 +17,6 @@ class Migration(migrations.Migration):
             model_name='game',
             name='winner',
             field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='game_won', to='api.Player'),
-        ),
-        migrations.AlterField(
-            model_name='move',
-            name='move',
-            field=models.CharField(choices=[('PAP', 'Paper'), ('ROC', 'Rock'), ('LIZ', 'Lizard'), ('SPO', 'Spock'), ('SIS', 'Scissors')], max_length=3),
         ),
         migrations.AlterField(
             model_name='round',

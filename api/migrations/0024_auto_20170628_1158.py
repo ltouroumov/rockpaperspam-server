@@ -14,11 +14,6 @@ class Migration(migrations.Migration):
 
     operations = [
         migrations.AlterField(
-            model_name='move',
-            name='move',
-            field=models.CharField(choices=[('LIZ', 'Lizard'), ('SPO', 'Spock'), ('SIS', 'Scissors'), ('ROC', 'Rock'), ('PAP', 'Paper')], max_length=3),
-        ),
-        migrations.AlterField(
             model_name='notification',
             name='data',
             field=django.contrib.postgres.fields.jsonb.JSONField(default={}),

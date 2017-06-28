@@ -17,9 +17,4 @@ class Migration(migrations.Migration):
             name='read',
             field=models.BooleanField(default=False),
         ),
-        migrations.AlterField(
-            model_name='move',
-            name='move',
-            field=models.CharField(choices=[('PAP', 'Paper'), ('ROC', 'Rock'), ('LIZ', 'Lizard'), ('SPO', 'Spock'), ('SIS', 'Scissors')], max_length=3),
-        ),
     ]

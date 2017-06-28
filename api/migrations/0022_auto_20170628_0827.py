@@ -33,11 +33,6 @@ class Migration(migrations.Migration):
                 ('body_key', models.CharField(max_length=256)),
             ],
         ),
-        migrations.AlterField(
-            model_name='move',
-            name='move',
-            field=models.CharField(choices=[('PAP', 'Paper'), ('SIS', 'Scissors'), ('ROC', 'Rock'), ('LIZ', 'Lizard'), ('SPO', 'Spock')], max_length=3),
-        ),
         migrations.AddField(
             model_name='notification',
             name='template',

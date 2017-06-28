@@ -15,6 +15,6 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='move',
             name='move',
-            field=models.CharField(choices=[('SPO', 'Spock'), ('ROC', 'Rock'), ('LIZ', 'Lizard'), ('SIS', 'Scissors'), ('PAP', 'Paper')], max_length=3),
+            field=models.CharField(choices=[('ROC', 'Rock'), ('PAP', 'Paper'), ('SIS', 'Scissors'), ('LIZ', 'Lizard'), ('SPO', 'Spock')], max_length=3),
         ),
     ]
