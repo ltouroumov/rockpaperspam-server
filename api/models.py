@@ -6,6 +6,7 @@ from django.db import models
 from .game import Moves, resolve_round, resolve_game
 from django.utils import timezone
 from api.locking import lock_factory
+from django.contrib.postgres.fields import JSONField
 
 
 class Client(models.Model):
@@ -192,6 +193,22 @@ class EnergyLevel(models.Model):
     owner = models.ForeignKey(to='Energy', related_name='levels')
     time = models.DateTimeField(auto_now_add=True)
     value = models.IntegerField()
+
+
+class Notification(models.Model):
+    client = models.ForeignKey(to='Client', related_name='notifications')
+    template = models.ForeignKey(to='NotificationTemplate')
+    when = models.DateTimeField(auto_now_add=True, editable=False)
+    read = models.BooleanField(default=False)
+    title_args = JSONField(default=[])
+    body_args = JSONField(default=[])
+    data = JSONField()
+
+
+class NotificationTemplate(models.Model):
+    id = models.CharField(max_length=256, primary_key=True)
+    title_key = models.CharField(max_length=256)
+    body_key = models.CharField(max_length=256)
 
 
 class Contact(models.Model):

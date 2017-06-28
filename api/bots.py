@@ -20,3 +20,7 @@ def on_game_play(sender, game_id, round_id, **kwargs):
 
         round_complete, game_complete = perform_resolve(the_game, the_round)
         process_resolve(round_complete, game_complete, the_game, the_round)
+
+
+def on_notification_saved(sender, **kwargs):
+    print("Notification saved")

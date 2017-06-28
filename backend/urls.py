@@ -3,7 +3,7 @@ from django.contrib import admin
 from django.views.generic.base import RedirectView
 
 from . import views
-from .views import clients, syncs, endpoints, games
+from .views import clients, syncs, endpoints, games, notifications
 
 admin.site.site_header = "RPS Admin"
 admin.site.site_title = "RPS Admin"
@@ -40,6 +40,9 @@ urlpatterns = [
     url(r'^games$', games.Index.as_view(), name='games'),
     url(r'^games/(?P<pk>\d+)$', games.Show.as_view(), name='show_game'),
     url(r'^games/(?P<pk>\d+)/_delete$', games.Delete.as_view(), name='delete_game'),
+
+    url(r'^notifications$', notifications.Index.as_view(), name='notifications'),
+    url(r'^notifications/send$', notifications.Send.as_view(), name='send_notification'),
 
     url(r'^$',  RedirectView.as_view(url='dashboard', permanent=False), name='home'),
 ]
