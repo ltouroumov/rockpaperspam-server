@@ -197,7 +197,7 @@ class EnergyLevel(models.Model):
 
 class Notification(models.Model):
     client = models.ForeignKey(to='Client', related_name='notifications')
-    template = models.ForeignKey(to='NotificationTemplate')
+    template = models.ForeignKey(to='NotificationTemplate', blank=True, null=True)
     when = models.DateTimeField(auto_now_add=True, editable=False)
     sent = models.BooleanField(default=False)
     read = models.BooleanField(default=False)
@@ -205,11 +205,27 @@ class Notification(models.Model):
     body_args = JSONField(default=[])
     data = JSONField(default={})
 
+    def payload(self):
+        payload = {
+            'title_loc_args': self.title_args,
+            'body_loc_args': self.body_args
+        }
+
+        return payload
+
 
 class NotificationTemplate(models.Model):
-    id = models.CharField(max_length=256, primary_key=True)
+    id = models.SlugField(max_length=256, primary_key=True)
     title_key = models.CharField(max_length=256)
     body_key = models.CharField(max_length=256)
+
+    def payload(self):
+        payload = {
+            'title_loc_key': self.title_key,
+            'body_loc_key': self.body_key
+        }
+
+        return payload
 
     def __str__(self):
         return self.id

@@ -74,7 +74,9 @@ def sync(request: Request):
         profile = Contact.objects.create()
         client.profile_id = profile.id
 
+    print("old token:", client.token)
     client.token = data['token']
+    print("new token:", client.token)
 
     profile.contact_id = profile_json['id']
     profile.contact_key = profile_json['key']
@@ -268,14 +270,21 @@ def start(request: Request):
 
     the_game.save()
 
-    fcm.send(to=[challenger.token, defender.token],
-             payload={
-                 'data': {
-                    'action': 'startGame',
-                    'id': the_game.id
-                 }
-             },
-             multicast=True)
+    # fcm.send(to=[challenger.token, defender.token],
+    #          payload={
+    #              'data': {
+    #                 'action': 'startGame',
+    #                 'id': the_game.id
+    #              }
+    #          },
+    #          multicast=True)
+
+    Notification.objects.create(client=challenger,
+                                data={'action': 'startGame', 'id': the_game.id})
+
+    Notification.objects.create(client=defender,
+                                template_id='new_game',
+                                body_args=[challenger.profile.display_name])
 
     on_game_start.send(sender='start', game_id=the_game.id)
 
@@ -290,24 +299,34 @@ def process_resolve(round_complete, game_complete, the_game, the_round):
             else:
                 resp = Response(status=status.HTTP_200_OK, data={'is_over': True, 'winner': None})
 
-            fcm.send(to=list(map(lambda p: p.client.token, the_game.player_set.all())),
-                     payload={
-                         'data': {
-                             'action': 'gameOver',
-                             'id': the_game.id
-                         }
-                     },
-                     multicast=True)
+            for player in the_game.player_set.all():
+                Notification.objects.create(client_id=player.client_id,
+                                            template_id='game_over',
+                                            data={'action': 'gameOver', 'id': the_game.id})
+
+            # fcm.send(to=list(map(lambda p: p.client.token, the_game.player_set.all())),
+            #          payload={
+            #              'data': {
+            #                  'action': 'gameOver',
+            #                  'id': the_game.id
+            #              }
+            #          },
+            #          multicast=True)
 
         else:
-            fcm.send(to=list(map(lambda p: p.client.token, the_game.player_set.all())),
-                     payload={
-                         'data': {
-                             'action': 'newRound',
-                             'id': the_game.id
-                         }
-                     },
-                     multicast=True)
+            for player in the_game.player_set.all():
+                Notification.objects.create(client_id=player.client_id,
+                                            template_id='new_round',
+                                            data={'action': 'newRound', 'id': the_game.id})
+
+            # fcm.send(to=list(map(lambda p: p.client.token, the_game.player_set.all())),
+            #          payload={
+            #              'data': {
+            #                  'action': 'newRound',
+            #                  'id': the_game.id
+            #              }
+            #          },
+            #          multicast=True)
 
             resp = Response(status=status.HTTP_200_OK, data={'is_over': False})
     else:
@@ -357,3 +376,25 @@ def play(request: Request, pk, rid):
             on_game_play.send(sender='play', game_id=the_game.id, round_id=the_round.id)
 
         return resp
+
+
+@api_view(['POST'])
+def notifications_ack(request: Request):
+
+    try:
+        notification_id = request.data['notification_id']
+    except KeyError:
+        return Response(status=status.HTTP_400_BAD_REQUEST, data={"error": "Missing 'notification_id' in body"})
+
+    try:
+        notification = Notification.objects.get(id=notification_id)
+    except Notification.DoesNotExist:
+        return Response(status=status.HTTP_400_BAD_REQUEST, data={"error": "Notification id does not exist"})
+
+    if notification.client_id != request.user.id:
+        return Response(status=status.HTTP_400_BAD_REQUEST, data={"error": "Cannot ack a notification not sent to you"})
+
+    notification.read = True
+    notification.save()
+
+    return Response(status=status.HTTP_200_OK)

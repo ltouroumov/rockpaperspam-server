@@ -2,6 +2,10 @@ from api.models import *
 from api.game import Moves, perform_resolve
 from api.views import process_resolve
 from random import choice
+from api.firebase import FirebaseCloudMessaging
+from backend import settings
+
+fcm = FirebaseCloudMessaging(settings.GCM_SERVER_KEY)
 
 
 def on_game_play(sender, game_id, round_id, **kwargs):
@@ -22,5 +26,37 @@ def on_game_play(sender, game_id, round_id, **kwargs):
         process_resolve(round_complete, game_complete, the_game, the_round)
 
 
-def on_notification_saved(sender, **kwargs):
-    print("Notification saved")
+def pre_notification_saved(sender, **kwargs):
+    notification = kwargs.pop('instance', None)
+    client = notification.client
+
+    if not client.token:
+        print("Client has no token")
+        notification.sent = True
+        notification.read = True
+
+
+def post_notification_saved(sender, **kwargs):
+    notification = kwargs.pop('instance', None)
+    client = notification.client
+    print("Notification {} saved".format(notification.id))
+    if notification.sent or not client.token:
+        return
+
+    payload = {}
+    payload['data'] = {'notification_id': notification.id}
+    payload['data'].update(notification.data)
+
+    if notification.template_id:
+        template = notification.template
+        payload['notification'] = template.payload()
+        payload['notification'].update(notification.payload())
+
+    print("to:", repr(client.token))
+    print("payload:", repr(payload))
+
+    fcm.send(to=client.token,
+             payload=payload)
+
+    notification.sent = True
+    notification.save()

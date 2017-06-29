@@ -16,7 +16,9 @@ class ClientChoiceField(forms.ModelChoiceField):
         return "{} ({})".format(obj.profile.display_name, obj.id)
 
 
-class JsonField(forms.CharField):
+class JsonField(forms.Field):
+
+    widget = forms.TextInput
 
     def to_python(self, value):
         try:
@@ -28,8 +30,9 @@ class JsonField(forms.CharField):
 class NotificationForm(forms.ModelForm):
     class Meta:
         model = Notification
-        fields = ['client', 'template', 'title_args', 'body_args']
+        fields = ['client', 'template', 'title_args', 'body_args', 'data']
 
     client = ClientChoiceField(queryset=Client.objects.order_by('profile__display_name'))
     title_args = JsonField(initial=[], required=False)
     body_args = JsonField(initial=[], required=False)
+    data = JsonField(initial={}, required=False)

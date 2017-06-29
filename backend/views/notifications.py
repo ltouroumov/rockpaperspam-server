@@ -35,11 +35,11 @@ class Index(LoginRequiredMixin, ListView):
             print("End Time", end_time)
             print("Period", period)
 
-            syncs = qs.objects.filter(when__gte=end_time, when__lte=start_time)
+            qs = qs.objects.filter(when__gte=end_time, when__lte=start_time)
         else:
-            syncs = qs.all()
+            qs = qs.all()
 
-        return syncs.order_by('-when')
+        return qs.order_by('-when')
 
 
 class Send(LoginRequiredMixin, CreateView):

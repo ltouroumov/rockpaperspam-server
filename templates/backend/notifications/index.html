@@ -11,12 +11,12 @@
     <div class="row">
         <div class="col-xs-12">
             <div class="pull-right">
-                <div class="tools">
-                    <a class="btn btn-success" href="{% url 'send_notification' %}">
-                        <i class="fa fa-send"></i> Send Notification
-                    </a>
-                </div>
                 {% include "backend/pagination.html" %}
+            </div>
+            <div class="tools">
+                <a class="btn btn-success" href="{% url 'send_notification' %}">
+                    <i class="fa fa-send"></i> Send Notification
+                </a>
             </div>
         </div>
     </div>
@@ -30,8 +30,8 @@
                         <th>Client</th>
                         <th>Template</th>
                         <th>When</th>
-                        <th>Read</th>
-                        <th width="75">&nbsp;</th>
+                        <th width="50">Sent</th>
+                        <th width="50">Read</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -39,21 +39,35 @@
                     <tr>
                         <td>{{ notif.id }}</td>
                         <td>
-                            <a href="{% url 'show_client' notif.client_id %}">
-                                {{ notif.client.profile.display_name }}
-                                <small>{{ notif.client_id }}</small>
+                            {% with client=notif.client %}
+                            <a href="{% url 'show_client' client.id %}">
+                                {{ client.profile.display_name }}
+                                <small>{{ client.id }}</small>
                             </a>
+                            {% endwith %}
                         </td>
-                        <td>{{ notif.template.id }}</td>
-                        <td>{{ notif.when|date:"c" }}</td>
                         <td>
+                            {% if notif.template_id %}
+                                {{ notif.template_id }}
+                            {% else %}
+                                &#8709;
+                            {% endif %}
+                        </td>
+                        <td>{{ notif.when|date:"c" }}</td>
+                        <td class="text-center">
+                            {% if notif.sent %}
+                                <i class="fa fa-check text-success"></i>
+                            {% else %}
+                                <i class="fa fa-times text-danger"></i>
+                            {% endif %}
+                        </td>
+                        <td class="text-center">
                             {% if notif.read %}
                                 <i class="fa fa-check text-success"></i>
                             {% else %}
                                 <i class="fa fa-times text-danger"></i>
                             {% endif %}
                         </td>
-                        <td></td>
                     </tr>
                 {% endfor %}
                 </tbody>
