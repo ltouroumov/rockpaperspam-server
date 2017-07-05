@@ -34,7 +34,6 @@ if __name__ == '__main__':
     exit(0)
 
 from redlock import RedLockFactory
+from rps_cnc import config
 
-from rps_cnc import settings
-
-lock_factory = RedLockFactory(connection_details=[parse_redis_url(settings.REDIS_URL)])
+lock_factory = RedLockFactory(connection_details=[parse_redis_url(url) for url in config.REDIS_MASTERS])

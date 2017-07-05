@@ -3,14 +3,14 @@ import random
 import string
 import dj_database_url
 
+from rps_cnc import config
+
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 PROJECT_ROOT = os.path.dirname(os.path.abspath(__file__))
 
 SECRET_KEY = os.environ.get("SECRET_KEY", "".join(random.choice(string.printable) for i in range(40)))
 GCM_SERVER_KEY = os.environ.get("GCM_SERVER_KEY", None)
 DEBUG = os.environ.get("DEBUG", False)
-
-REDIS_URL = os.environ.get('REDIS_URL', 'redis://localhost:6379')
 
 # Application definition
 INSTALLED_APPS = (
@@ -83,7 +83,7 @@ REST_FRAMEWORK = {
 # https://docs.djangoproject.com/en/1.9/ref/settings/#databases
 
 DATABASES = {
-    'default': dj_database_url.config(default="postgres:///rps-cnc", conn_max_age=500)
+    'default': config.DEFAULT_DATABASE
 }
 
 AUTH_PASSWORD_VALIDATORS = (
@@ -131,7 +131,7 @@ CHANNEL_LAYERS = {
     "default": {
         "BACKEND": "asgi_redis.RedisChannelLayer",
         "CONFIG": {
-            "hosts": [REDIS_URL],
+            "hosts": config.REDIS_MASTERS,
         },
         "ROUTING": "backend.routing.channel_routing",
     },
