@@ -1,17 +1,19 @@
+import itertools
+
+import os
+from django.db.utils import IntegrityError
+from rest_framework import permissions
 from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.exceptions import APIException
 from rest_framework.request import Request
 from rest_framework.response import Response
-from rest_framework import permissions
-from django.db.utils import IntegrityError
-from .models import *
+
 from api.firebase import FirebaseCloudMessaging
-from api.signals import *
 from api.game import perform_resolve
-from backend import settings
-import itertools
-import os
+from api.signals import *
+from rps_cnc import settings
+from .models import *
 
 fcm = FirebaseCloudMessaging(settings.GCM_SERVER_KEY)
 

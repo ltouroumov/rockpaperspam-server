@@ -33,7 +33,8 @@ if __name__ == '__main__':
     print(parse_redis_url(redis_url))
     exit(0)
 
-from backend import settings
 from redlock import RedLockFactory
+
+from rps_cnc import settings
 
 lock_factory = RedLockFactory(connection_details=[parse_redis_url(settings.REDIS_URL)])

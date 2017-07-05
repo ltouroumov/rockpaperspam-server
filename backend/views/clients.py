@@ -11,10 +11,10 @@ from django.views.generic.detail import SingleObjectMixin
 
 from api.firebase import FirebaseCloudMessaging
 from api.models import Client, Contact, Energy
-from backend import settings
+from backend.forms import CreateClientForm
 from backend.models import Endpoint
 from backend.utils import ModelChoiceFieldWithLabel
-from backend.forms import CreateClientForm
+from rps_cnc import settings
 
 
 class Index(LoginRequiredMixin, ListView):

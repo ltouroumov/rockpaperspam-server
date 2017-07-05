@@ -1,9 +1,10 @@
-from api.models import *
-from api.game import Moves, perform_resolve
-from api.views import process_resolve
 from random import choice
+
 from api.firebase import FirebaseCloudMessaging
-from backend import settings
+from api.game import Moves, perform_resolve
+from api.models import *
+from api.views import process_resolve
+from rps_cnc import settings
 
 fcm = FirebaseCloudMessaging(settings.GCM_SERVER_KEY)
 
