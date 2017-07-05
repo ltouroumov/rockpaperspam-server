@@ -262,6 +262,28 @@ def start(request: Request):
     if 'rounds' not in request.data:
         return Response(status=status.HTTP_400_BAD_REQUEST, data={'error': 'Missing number of rounds'})
 
+    try:
+        from django.db import connection
+        with connection.cursor() as cur:
+            cur.execute('''
+              SELECT count(g.*)
+              FROM api_game g
+              JOIN api_player p1 ON g.id = p1.game_id AND p1.client_id = %s
+              JOIN api_player p2 ON g.id = p2.game_id AND p2.client_id = %s
+              WHERE g.status = 'O'
+            ''', [challenger.id, defender.id])
+
+            row = cur.fetchone()
+            number = row[0]
+
+            if number > 0:
+                print("Already challenging {}!".format(defender.id))
+                return Response(status=status.HTTP_400_BAD_REQUEST, data={'error': 'You are already playing against this user'})
+    except Exception as ex:
+        from traceback import print_exc
+        print_exc()
+        raise APIException()
+
     the_game = Game.objects.create(rounds_num=request.data['rounds'])
     the_game.player_set.create(client=challenger)
     the_game.player_set.create(client=defender)
@@ -269,15 +291,6 @@ def start(request: Request):
     the_game.rounds.create(number=1)
 
     the_game.save()
-
-    # fcm.send(to=[challenger.token, defender.token],
-    #          payload={
-    #              'data': {
-    #                 'action': 'startGame',
-    #                 'id': the_game.id
-    #              }
-    #          },
-    #          multicast=True)
 
     Notification.objects.create(client=challenger,
                                 data={'action': 'startGame', 'id': the_game.id})
@@ -304,29 +317,11 @@ def process_resolve(round_complete, game_complete, the_game, the_round):
                                             template_id='game_over',
                                             data={'action': 'gameOver', 'id': the_game.id})
 
-            # fcm.send(to=list(map(lambda p: p.client.token, the_game.player_set.all())),
-            #          payload={
-            #              'data': {
-            #                  'action': 'gameOver',
-            #                  'id': the_game.id
-            #              }
-            #          },
-            #          multicast=True)
-
         else:
             for player in the_game.player_set.all():
                 Notification.objects.create(client_id=player.client_id,
                                             template_id='new_round',
                                             data={'action': 'newRound', 'id': the_game.id})
-
-            # fcm.send(to=list(map(lambda p: p.client.token, the_game.player_set.all())),
-            #          payload={
-            #              'data': {
-            #                  'action': 'newRound',
-            #                  'id': the_game.id
-            #              }
-            #          },
-            #          multicast=True)
 
             resp = Response(status=status.HTTP_200_OK, data={'is_over': False})
     else:
