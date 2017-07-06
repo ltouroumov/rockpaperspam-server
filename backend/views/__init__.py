@@ -32,7 +32,7 @@ def login_view(request: HttpRequest):
 @login_required
 def logout_view(request):
     logout(request)
-    return redirect(to='dashboard')
+    return redirect(to='login')
 
 
 @login_required
