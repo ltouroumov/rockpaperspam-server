@@ -1,16 +1,13 @@
 import os
-import random
-import string
-import dj_database_url
 
 from rps_cnc import config
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 PROJECT_ROOT = os.path.dirname(os.path.abspath(__file__))
 
-SECRET_KEY = os.environ.get("SECRET_KEY", "".join(random.choice(string.printable) for i in range(40)))
-GCM_SERVER_KEY = os.environ.get("GCM_SERVER_KEY", None)
-DEBUG = os.environ.get("DEBUG", False)
+SECRET_KEY = config.SECRET_KEY
+GCM_SERVER_KEY = config.GCM_SERVER_KEY
+DEBUG = config.DEBUG
 
 # Application definition
 INSTALLED_APPS = (
