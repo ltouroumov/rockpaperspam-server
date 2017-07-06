@@ -9,3 +9,4 @@ env/
 contacts.json
 _data/
 .client_shell_history
+rps_cnc/config.py
