@@ -92,6 +92,46 @@ class Delete(LoginRequiredMixin, DeleteView):
     success_url = reverse_lazy('clients')
 
 
+class Reset(LoginRequiredMixin, SingleObjectMixin, TemplateResponseMixin, View):
+    model = Client
+    template_name = "backend/alert.html"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context.update({
+            'alert_type': 'danger',
+            'alert_title': 'Reset client data?',
+            'alert_body': 'Do you want to erase all data for this client?',
+            'alert_cancel': reverse('clients')
+        })
+        return context
+
+    def get(self, request, *args, **kwargs):
+        self.object = self.get_object()
+
+        ctx = self.get_context_data()
+        return self.render_to_response(ctx)
+
+    def post(self, request, *args, **kwargs):
+        obj = self.get_object()
+
+        try:
+            obj.token = ''
+            obj.profile.reset()
+            obj.contacts.all().delete()
+            obj.games.delete()
+            obj.sync_set.all().delete()
+            obj.energy.reset()
+            obj.save()
+        except:
+            from traceback import print_exc
+            print_exc()
+            messages.error(request, 'Failed to reset client!')
+
+        messages.info(request, 'Client reset')
+        return redirect('clients')
+
+
 class DeleteMulti(LoginRequiredMixin, TemplateResponseMixin, View):
     template_name = "backend/clients/delete_multi.html"
 

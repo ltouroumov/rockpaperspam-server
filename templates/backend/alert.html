@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <!-- /.row -->
+    <div class="row" style="padding-top: 40px">
+        <div class="col-xs-12 col-md-offset-3 col-md-6">
+            <form method="post" class="panel panel-{{ alert_type }}">
+                {% csrf_token %}
+                <div class="panel-heading">
+                    {{ alert_title }}
+                </div>
+                <div class="panel-body">
+                    {{ alert_body }}
+                </div>
+                <div class="panel-footer">
+                    <div class="pull-right">
+                        <button class="btn btn-success" type="submit">Yes</button>
+                        <a class="btn btn-danger" href="{{ alert_cancel }}">No</a>
+                    </div>
+                    <div class="clearfix"></div>
+                </div>
+            </form>
+        </div>
+    </div>
+{% endblock content %}

@@ -56,6 +56,11 @@ def register(request: Request):
         })
 
 
+@api_view(['GET'])
+def ping(request: Request):
+    return Response(status=status.HTTP_200_OK)
+
+
 @api_view(['POST'])
 def sync(request: Request):
     """

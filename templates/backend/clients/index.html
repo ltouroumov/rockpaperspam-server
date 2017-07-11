@@ -26,12 +26,12 @@
         </div>
         <div class="col-xs-12 col-md-8">
             <div class="pull-right">
-                <div class="tools">
-                    <a class="btn btn-info" href="{% url 'create_client' %}">
-                        <i class="fa fa-plus-circle"></i> New Client
-                    </a>
-                </div>
                 {% include "backend/pagination.html" %}
+            </div>
+            <div class="tools">
+                <a class="btn btn-info" href="{% url 'create_client' %}">
+                    <i class="fa fa-plus-circle"></i> New Client
+                </a>
             </div>
         </div>
     </div>
@@ -49,7 +49,7 @@
                     <th>Profile Name</th>
                     <th>Client ID</th>
                     <th>Last Sync</th>
-                    <th width="75">&nbsp;</th>
+                    <th width="120">&nbsp;</th>
                 </tr>
                 </thead>
                 <tbody>
@@ -65,6 +65,7 @@
                         <td><a href="{% url 'show_client' client.id %}">{{ client.id }}</a></td>
                         <td>{{ client | last_sync }}</td>
                         <td class="actions-cell">
+                            <a href="{% url 'reset_client' client.id %}" class="btn btn-warning"><i class="fa fa-bomb"></i></a>
                             <a href="{% url 'delete_client' client.id %}" class="btn btn-danger"><i class="fa fa-trash"></i></a>
                         </td>
                     </tr>

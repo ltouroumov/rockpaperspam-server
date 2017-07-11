@@ -145,6 +145,12 @@ class Energy(models.Model):
     regen_rate = models.FloatField()  # in points per hour
     pool_size = models.IntegerField()
 
+    def reset(self):
+        self.regen_rate = 0
+        self.pool_size = 0
+        self.levels.all().delete()
+        self.save()
+
     @property
     def levels_by_time(self):
         return self.levels.order_by('-time')
@@ -236,6 +242,13 @@ class Contact(models.Model):
     contact_id = models.BigIntegerField(default=0)
     contact_key = models.CharField(max_length=1024, default="0")
     display_name = models.CharField(max_length=1024)
+
+    def reset(self):
+        self.contact_id = 0
+        self.contact_key = '0'
+        self.display_name = 'Unkown'
+        self.raw_contacts.all().delete()
+        self.save()
 
     @property
     def key(self):
