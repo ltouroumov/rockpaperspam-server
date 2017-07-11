@@ -1,0 +1,42 @@
+[
+  {
+    "model": "api.notificationtemplate",
+    "pk": "game_over",
+    "fields": {
+      "title_key": "notif_game_over_title",
+      "body_key": "notif_game_over_body"
+    }
+  },
+  {
+    "model": "api.notificationtemplate",
+    "pk": "new_game",
+    "fields": {
+      "title_key": "notif_new_game_title",
+      "body_key": "notif_new_game_body"
+    }
+  },
+  {
+    "model": "api.notificationtemplate",
+    "pk": "new_round",
+    "fields": {
+      "title_key": "notif_new_round_title",
+      "body_key": "notid_new_round_body"
+    }
+  },
+  {
+    "model": "api.notificationtemplate",
+    "pk": "test",
+    "fields": {
+      "title_key": "notif_test_title",
+      "body_key": "notif_test_body"
+    }
+  },
+  {
+    "model": "api.notificationtemplate",
+    "pk": "welcome",
+    "fields": {
+      "title_key": "notif_welcome_title",
+      "body_key": "notif_welcome_body"
+    }
+  }
+]
