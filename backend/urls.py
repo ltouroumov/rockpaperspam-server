@@ -3,7 +3,7 @@ from django.contrib import admin
 from django.views.generic.base import RedirectView
 
 from . import views
-from .views import clients, syncs, endpoints, games, notifications, notification_templates
+from .views import clients, syncs, endpoints, games, notifications, notification_templates, config
 
 admin.site.site_header = "RPS Admin"
 admin.site.site_title = "RPS Admin"
@@ -49,6 +49,11 @@ urlpatterns = [
     url(r'^notifications/templates/_create$', notification_templates.Create.as_view(), name='create_notification_template'),
     url(r'^notifications/templates/(?P<pk>[^/]+)/_edit', notification_templates.Update.as_view(), name='edit_notification_template'),
     url(r'^notifications/templates/(?P<pk>[^/]+)/_delete', notification_templates.Delete.as_view(), name='delete_notification_template'),
+
+    url(r'^config$', config.Index.as_view(), name='config'),
+    url(r'^config/_create$', config.Create.as_view(), name='new_config'),
+    url(r'^config/(?P<pk>[^/]+)/_edit$', config.Update.as_view(), name='edit_config'),
+    url(r'^config/(?P<pk>[^/]+)/_delete$', config.Delete.as_view(), name='delete_config'),
 
     url(r'^$',  RedirectView.as_view(url='dashboard', permanent=False), name='home'),
 ]

@@ -1,5 +1,5 @@
 from django import forms
-from api.models import Notification, Client
+from api.models import Notification, Client, ConfigurationKey
 import json
 
 
@@ -36,3 +36,17 @@ class NotificationForm(forms.ModelForm):
     title_args = JsonField(initial=[], required=False)
     body_args = JsonField(initial=[], required=False)
     data = JsonField(initial={}, required=False)
+
+
+class ConfigurationKeyForm(forms.ModelForm):
+
+    value = forms.CharField()
+
+    class Meta:
+        model = ConfigurationKey
+        fields = ['key', 'value_type']
+
+    def save(self, commit=True):
+        model = super().save(commit)
+        model.raw_value = self.cleaned_data['value']
+        return model

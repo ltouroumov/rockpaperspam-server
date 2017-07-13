@@ -400,3 +400,22 @@ def notifications_ack(request: Request):
     notification.save()
 
     return Response(status=status.HTTP_200_OK)
+
+
+@api_view(['GET'])
+def config(request: Request, key=None):
+    if key:
+        try:
+            conf_key = ConfigurationKey.objects.get(key=key)
+        except ConfigurationKey.DoesNotExist:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+
+        return Response(status=status.HTTP_200_OK, data={conf_key.key: conf_key.value})
+    else:
+        conf_keys = ConfigurationKey.objects.all()
+
+        config = {}
+        for conf_key in conf_keys:
+            config[conf_key.key] = conf_key.value
+
+        return Response(status=status.HTTP_200_OK, data=config)

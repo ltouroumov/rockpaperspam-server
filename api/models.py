@@ -9,6 +9,57 @@ from api.locking import lock_factory
 from django.contrib.postgres.fields import JSONField
 
 
+class ConfigurationKey(models.Model):
+    TYPES = (
+        ('INT', 'Integer'),
+        ('STR', 'String'),
+        ('OBJ', 'Object (JSON)')
+    )
+
+    key = models.CharField(max_length=64)
+    value_type = models.CharField(max_length=3, choices=TYPES)
+
+    def _encode(self, value):
+        if self.value_type == 'INT':
+            return str(value)
+        elif self.value_type == 'OBJ':
+            import json
+            return json.dumps(value)
+        else:
+            return value
+
+    def _decode(self, value):
+        if self.value_type == 'INT':
+            return int(value)
+        elif self.value_type == 'OBJ':
+            import json
+            return json.loads(value)
+        else:
+            return value
+
+    @property
+    def raw_value(self):
+        return self.value_history.order_by('date_created').first().value
+
+    @raw_value.setter
+    def raw_value(self, val):
+        self.value_history.create(value=val)
+
+    @property
+    def value(self):
+        return self._decode(self.raw_value)
+
+    @value.setter
+    def value(self, val):
+        self.raw_value = self._encode(val)
+
+
+class ConfigurationValue(models.Model):
+    key = models.ForeignKey(to='ConfigurationKey', related_name='value_history')
+    date_created = models.DateTimeField(auto_now_add=True)
+    value = models.TextField()
+
+
 class Client(models.Model):
     id = models.UUIDField(primary_key=True)
     secret = models.TextField(default="00")

@@ -12,5 +12,7 @@ urlpatterns = [
     url(r'^games/start$', views.start),
     url(r'^games/(?P<pk>\d+)$', views.game),
     url(r'^games/(?P<pk>\d+)/(?P<rid>\d+)$', views.play),
-    url(r'^notifications/ack', views.notifications_ack)
+    url(r'^notifications/ack$', views.notifications_ack),
+    url(r'^config$', views.config),
+    url(r'^config/(?P<key>.+)$', views.config),
 ]
