@@ -1,0 +1,53 @@
+[
+    {
+        "model": "api.configurationkey",
+        "pk": 1,
+        "fields": {
+            "key": "share_message",
+            "value_type": "STR"
+        }
+    },
+    {
+        "model": "api.configurationkey",
+        "pk": 2,
+        "fields": {
+            "key": "energy.initial_pool_size",
+            "value_type": "INT"
+        }
+    },
+    {
+        "model": "api.configurationkey",
+        "pk": 3,
+        "fields": {
+            "key": "energy.initial_regen_rate",
+            "value_type": "INT"
+        }
+    },
+    {
+        "model": "api.configurationvalue",
+        "pk": 1,
+        "fields": {
+            "key": 1,
+            "date_created": "2017-07-13T11:03:18.607Z",
+            "value": "Bla Bla Bla"
+        }
+    },
+    {
+        "model": "api.configurationvalue",
+        "pk": 2,
+        "fields": {
+            "key": 2,
+            "date_created": "2017-07-13T11:03:54.268Z",
+            "value": "5"
+        }
+    },
+    {
+        "model": "api.configurationvalue",
+        "pk": 3,
+        "fields": {
+            "key": 3,
+            "date_created": "2017-07-13T11:04:17.328Z",
+            "value": "6"
+        }
+    }
+]
