@@ -124,15 +124,15 @@ STATICFILES_DIRS = [
 ]
 
 # Channel settings
-CHANNEL_LAYERS = {
-    "default": {
-        "BACKEND": "asgi_redis.RedisChannelLayer",
-        "CONFIG": {
-            "hosts": config.REDIS_MASTERS,
-        },
-        "ROUTING": "backend.routing.channel_routing",
-    },
-}
+# CHANNEL_LAYERS = {
+#     "default": {
+#         "BACKEND": "asgi_redis.RedisChannelLayer",
+#         "CONFIG": {
+#             "hosts": config.REDIS_MASTERS,
+#         },
+#         "ROUTING": "backend.routing.channel_routing",
+#     },
+# }
 
 # Logging
 LOGGING = {
