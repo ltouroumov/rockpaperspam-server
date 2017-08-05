@@ -23,11 +23,27 @@
             </dl>
         </td>
         <td>
-            <a class="btn btn-sm btn-default" href="{% url 'clone_client' client.id item.id %}">
-                <i class="fa fa-copy"></i> Copy
+            <a class="btn btn-sm btn-default" href="{% url 'clone_contact' client.id item.id %}">
+                <i class="fa fa-files-o"></i>
+            </a>
+            <a class="btn btn-sm btn-default" href="{% url 'delete_contact' client.id item.id %}">
+                <i class="fa fa-trash"></i>
             </a>
         </td>
     </tr>
 {% endfor %}
 </tbody>
+<tfoot>
+    <tr>
+        <td colspan="2"></td>
+        <td>
+            <a class="btn btn-sm btn-default" href="{% url 'create_contact' client.id %}">
+                <i class="fa fa-plus"></i>
+            </a>
+            <a class="btn btn-sm btn-default" href="{% url 'link_contact' client.id %}">
+                <i class="fa fa-link"></i>
+            </a>
+        </td>
+    </tr>
+</tfoot>
 </table>

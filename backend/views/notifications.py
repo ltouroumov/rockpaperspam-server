@@ -4,7 +4,7 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.urls import reverse_lazy
 from django.views.generic import ListView, FormView, CreateView
 
-from api.models import Notification
+from api.models import Notification, Client, NotificationTemplate
 from backend.forms import NotificationForm
 
 
@@ -47,3 +47,16 @@ class Send(LoginRequiredMixin, CreateView):
     form_class = NotificationForm
     template_name = "backend/notifications/form.html"
     success_url = reverse_lazy('notifications')
+
+    def get_initial(self):
+        init = super().get_initial()
+
+        client_id = self.request.GET.get('client', None)
+        if client_id:
+            init['client'] = Client.objects.get(id=client_id)
+
+        template_id = self.request.GET.get('template', None)
+        if template_id:
+            init['template'] = NotificationTemplate.objects.get(id=template_id)
+
+        return init

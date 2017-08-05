@@ -10,7 +10,7 @@ from django.views.generic.base import TemplateResponseMixin
 from django.views.generic.detail import SingleObjectMixin
 
 from api.firebase import FirebaseCloudMessaging
-from api.models import Client, Contact, Energy
+from api.models import Client, Contact, Energy, Notification
 from backend.forms import CreateClientForm
 from backend.models import Endpoint
 from backend.utils import ModelChoiceFieldWithLabel
@@ -218,8 +218,8 @@ class CloneForm(forms.Form):
         queryset=Endpoint.objects.all())
 
 
-class Clone(LoginRequiredMixin, TemplateResponseMixin, View):
-    template_name = "backend/clients/clone.html"
+class ContactClone(LoginRequiredMixin, TemplateResponseMixin, View):
+    template_name = "backend/clients/contacts/clone.html"
 
     def get(self, request, pk, cid, *args, **kwargs):
         client = Client.objects.get(id=pk)
@@ -255,3 +255,56 @@ class Clone(LoginRequiredMixin, TemplateResponseMixin, View):
                 'contact': contact,
                 'form': form
             })
+
+
+class ContactForm(forms.Form):
+    display_name = forms.CharField()
+    phone_number = forms.CharField()
+
+
+class ContactCreate(LoginRequiredMixin, FormView):
+    template_name = "backend/clients/contacts/form.html"
+    form_class = ContactForm
+
+    def form_valid(self, form):
+
+        # Sent notification
+
+        return super(ContactCreate, self).form_valid(form)
+
+
+class ContactDelete(LoginRequiredMixin, SingleObjectMixin, TemplateResponseMixin, View):
+    model = Contact
+    pk_url_kwarg = 'cid'
+    template_name = "backend/alert.html"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context.update({
+            'alert_type': 'danger',
+            'alert_title': 'Delete contact {}?'.format(self.object.display_name),
+            'alert_body': 'This will permanently erase the contact from the device!',
+            'alert_cancel': reverse('show_client', args=(self.kwargs['pk'],))
+        })
+        return context
+
+    def get(self, request, *args, **kwargs):
+        self.object = self.get_object()
+
+        ctx = self.get_context_data(**kwargs)
+        return self.render_to_response(ctx)
+
+    def post(self, request, pk, *args, **kwargs):
+
+        contact = self.get_object()
+        client = Client.objects.get(id=pk)
+        notif = Notification(client=client)
+        notif.data = {
+            'action': 'contact.del',
+            'contact_id': contact.contact_id,
+            'contact_key': contact.contact_key
+        }
+        notif.save()
+
+        messages.success(request, "Deletion notification sent!")
+        return redirect(to='show_client', pk=pk)

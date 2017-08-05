@@ -44,14 +44,19 @@ def post_notification_saved(sender, **kwargs):
     if notification.sent or not client.token:
         return
 
-    payload = {}
+    payload = dict()
     payload['data'] = {'notification_id': notification.id}
-    payload['data'].update(notification.data)
 
     if notification.template_id:
         template = notification.template
-        payload['notification'] = template.payload()
-        payload['notification'].update(notification.payload())
+        
+        if template.has_notification():
+            payload['notification'] = template.payload()
+            payload['notification'].update(notification.payload())
+
+        payload['data'].update(template.data)
+
+    payload['data'].update(notification.data)
 
     print("to:", repr(client.token))
     print("payload:", repr(payload))

@@ -26,6 +26,7 @@
                         <th>ID</th>
                         <th>Title key</th>
                         <th>Body key</th>
+                        <th>Data</th>
                         <th width="100">&nbsp;</th>
                     </tr>
                 </thead>
@@ -35,6 +36,7 @@
                         <td>{{ notif.id }}</td>
                         <td>{{ notif.title_key }}</td>
                         <td>{{ notif.body_key }}</td>
+                        <td>{{ notif.data }}</td>
                         <td class="actions-cell">
                             <a class="btn btn-info" href="{% url 'edit_notification_template' notif.id %}">
                                 <i class="fa fa-pencil"></i>

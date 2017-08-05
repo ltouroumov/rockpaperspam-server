@@ -5,6 +5,7 @@ from django.urls import reverse_lazy
 from django.views.generic import ListView, CreateView, UpdateView, DeleteView
 
 from api.models import NotificationTemplate
+from backend.forms import NotificationTemplateForm
 
 
 class Index(LoginRequiredMixin, ListView):
@@ -44,14 +45,14 @@ class Index(LoginRequiredMixin, ListView):
 
 class Create(LoginRequiredMixin, CreateView):
     model = NotificationTemplate
-    fields = ['id', 'title_key', 'body_key']
+    form_class = NotificationTemplateForm
     template_name = "backend/notification_templates/form.html"
     success_url = reverse_lazy('notification_templates')
 
 
 class Update(LoginRequiredMixin, UpdateView):
     model = NotificationTemplate
-    fields = ['id', 'title_key', 'body_key']
+    form_class = NotificationTemplateForm
     template_name = "backend/notification_templates/form.html"
     success_url = reverse_lazy('notification_templates')
 

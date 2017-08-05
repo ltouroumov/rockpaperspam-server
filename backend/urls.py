@@ -29,7 +29,10 @@ urlpatterns = [
     url(r'^clients/(?P<pk>[a-f0-9\-]+)/_reset', clients.Reset.as_view(), name='reset_client'),
     url(r'^clients/(?P<pk>[a-f0-9\-]+)/energy', clients.EditEnergy.as_view(), name='edit_client_energy'),
     url(r'^clients/(?P<pk>[a-f0-9\-]+)/send$', clients.Send.as_view(), name='send_client'),
-    url(r'^clients/(?P<pk>[a-f0-9\-]+)/clone/(?P<cid>[a-f0-9\-]+)$', clients.Clone.as_view(), name='clone_client'),
+    url(r'^clients/(?P<pk>[a-f0-9\-]+)/contact/_create$', clients.ContactCreate.as_view(), name='create_contact'),
+    url(r'^clients/(?P<pk>[a-f0-9\-]+)/contact/_link$', clients.ContactCreate.as_view(), name='link_contact'),
+    url(r'^clients/(?P<pk>[a-f0-9\-]+)/contact/(?P<cid>[a-f0-9\-]+)/clone$', clients.ContactClone.as_view(), name='clone_contact'),
+    url(r'^clients/(?P<pk>[a-f0-9\-]+)/contact/(?P<cid>[a-f0-9\-]+)/_delete$', clients.ContactDelete.as_view(), name='delete_contact'),
 
     url(r'^syncs$', syncs.Index.as_view(), name='syncs'),
 

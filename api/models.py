@@ -273,8 +273,12 @@ class Notification(models.Model):
 
 class NotificationTemplate(models.Model):
     id = models.SlugField(max_length=256, primary_key=True)
-    title_key = models.CharField(max_length=256)
-    body_key = models.CharField(max_length=256)
+    title_key = models.CharField(max_length=256, blank=True, null=True)
+    body_key = models.CharField(max_length=256, blank=True, null=True)
+    data = JSONField(default={})
+
+    def has_notification(self):
+        return len(self.title_key) > 0 and len(self.body_key) > 0
 
     def payload(self):
         payload = {

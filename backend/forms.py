@@ -1,5 +1,5 @@
 from django import forms
-from api.models import Notification, Client, ConfigurationKey
+from api.models import Notification, NotificationTemplate, Client, ConfigurationKey
 import json
 
 
@@ -35,6 +35,14 @@ class NotificationForm(forms.ModelForm):
     client = ClientChoiceField(queryset=Client.objects.order_by('profile__display_name'))
     title_args = JsonField(initial=[], required=False)
     body_args = JsonField(initial=[], required=False)
+    data = JsonField(initial={}, required=False)
+
+
+class NotificationTemplateForm(forms.ModelForm):
+    class Meta:
+        model = NotificationTemplate
+        fields = ['id', 'title_key', 'body_key', 'data']
+
     data = JsonField(initial={}, required=False)
 
 

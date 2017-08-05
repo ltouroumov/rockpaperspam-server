@@ -17,7 +17,6 @@ INSTALLED_APPS = (
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'channels',
     'backend',
     'api',
     'django_forms_bootstrap',
