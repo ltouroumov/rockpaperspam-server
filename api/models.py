@@ -39,7 +39,7 @@ class ConfigurationKey(models.Model):
 
     @property
     def raw_value(self):
-        return self.value_history.order_by('date_created').first().value
+        return self.value_history.order_by('-date_created').first().value
 
     @raw_value.setter
     def raw_value(self, val):

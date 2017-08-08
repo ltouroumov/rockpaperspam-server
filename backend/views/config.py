@@ -24,6 +24,12 @@ class Update(LoginRequiredMixin, UpdateView):
     form_class = ConfigurationKeyForm
     template_name = "backend/config/form.html"
 
+    def get_initial(self):
+        ctx = super().get_initial()
+        ctx['value'] = self.object.raw_value
+
+        return ctx
+
 
 class Delete(LoginRequiredMixin, DeleteView):
     model = ConfigurationKey

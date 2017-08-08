@@ -47,14 +47,13 @@ class NotificationTemplateForm(forms.ModelForm):
 
 
 class ConfigurationKeyForm(forms.ModelForm):
-
     value = forms.CharField()
 
     class Meta:
         model = ConfigurationKey
-        fields = ['key', 'value_type']
+        fields = ['key', 'value_type', 'value']
 
     def save(self, commit=True):
-        model = super().save(commit)
-        model.raw_value = self.cleaned_data['value']
-        return model
+        self.instance.raw_value = self.cleaned_data['value']
+        print("saving:" + repr(self.instance.raw_value))
+        return super().save(commit)
