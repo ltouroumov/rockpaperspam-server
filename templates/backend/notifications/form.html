@@ -19,7 +19,7 @@
                 {% csrf_token %}
                 {{ form|as_bootstrap }}
                 <button class="btn btn-success" type="submit">Save</button>
-                <a class="btn btn-danger" href="{% url 'notifications' %}">Cancel</a>
+                <a class="btn btn-danger" href="{{ return_url }}">Cancel</a>
             </form>
         </div>
     </div>

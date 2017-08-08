@@ -30,6 +30,20 @@ class ContactSerializer(serializers.ModelSerializer):
         fields = ('id', 'display_name')
 
 
+class DataSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Data
+        fields = ('type', 'value')
+
+
+class RawContactSerializer(serializers.ModelSerializer):
+    data = DataSerializer(many=True)
+
+    class Meta:
+        model = RawContact
+        fields = ('id', 'contact_type', 'contact_name', 'data')
+
+
 class EnergySerializer(serializers.ModelSerializer):
     class Meta:
         model = Energy

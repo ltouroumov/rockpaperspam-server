@@ -41,7 +41,7 @@
                     <a href="{% url 'reset_client' client.id %}?return=show" class="btn btn-sm btn-warning">
                         <i class="fa fa-bomb"></i> Reset
                     </a>
-                    <a href="{% url 'send_notification' %}?client={{ client.id }}&template=sync" class="btn btn-sm btn-info">
+                    <a href="{% url 'send_notification' %}?client={{ client.id }}&template=sync&return=client" class="btn btn-sm btn-info">
                         <i class="fa fa-refresh"></i> Sync
                     </a>
                 </div>
@@ -63,7 +63,7 @@
                     </div>
                 </div>
                 <div class="panel-footer">
-                    <a class="btn btn-sm btn-info" href="{% url 'send_notification' %}?client={{ client.id }}">
+                    <a class="btn btn-sm btn-info" href="{% url 'send_notification' %}?client={{ client.id }}&return=client">
                         <i class="fa fa-envelope"></i> Send Notification
                     </a>
                 </div>

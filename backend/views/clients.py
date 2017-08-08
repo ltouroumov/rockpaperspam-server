@@ -10,7 +10,8 @@ from django.views.generic.base import TemplateResponseMixin
 from django.views.generic.detail import SingleObjectMixin
 
 from api.firebase import FirebaseCloudMessaging
-from api.models import Client, Contact, Energy, Notification
+from api.models import Client, Contact, Energy, Notification, RawContact, Data
+from api.serializers import RawContactSerializer
 from backend.forms import CreateClientForm
 from backend.models import Endpoint
 from backend.utils import ModelChoiceFieldWithLabel
@@ -218,43 +219,37 @@ class CloneForm(forms.Form):
         queryset=Endpoint.objects.all())
 
 
-class ContactClone(LoginRequiredMixin, TemplateResponseMixin, View):
-    template_name = "backend/clients/contacts/clone.html"
+class ContactClone(LoginRequiredMixin, FormView):
+    template_name = "backend/clients/contacts/form.html"
+    form_class = CloneForm
 
-    def get(self, request, pk, cid, *args, **kwargs):
-        client = Client.objects.get(id=pk)
-        contact = client.contacts.get(id=cid)
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        ctx['form_title'] = "Create Contact"
+        ctx['client'] = Client.objects.get(id=self.kwargs['pk'])
 
-        return self.render_to_response({
-            'client': client,
-            'contact': contact,
-            'form': CloneForm()
-        })
+        return ctx
 
-    def post(self, request, pk, cid, *args, **kwargs):
-        client = Client.objects.get(id=pk)
-        contact = client.contacts.get(id=cid)
+    def get_success_url(self):
+        return reverse('show_client', kwargs={'pk': self.kwargs['pk']})
 
-        form = CloneForm(request.POST)
-        if form.is_valid():
-            target = form.cleaned_data['endpoint']
+    def form_valid(self, form):
 
-            firebase = FirebaseCloudMessaging(server_key=settings.GCM_SERVER_KEY)
-            firebase.send(to=client.token, payload={'data': {
-                'action': 'dupe',
-                'contact_id': contact.contact_id,
-                'contact_key': contact.contact_key,
-                'target': target.number
-            }})
+        client = Client.objects.get(id=self.kwargs['pk'])
+        contact = client.contacts.get(id=self.kwargs['cid'])
 
-            messages.success(request, "Contact Cloned")
-            return redirect(to='show_client', pk=pk)
-        else:
-            return self.render_to_response({
-                'client': client,
-                'contact': contact,
-                'form': form
-            })
+        target = form.cleaned_data['endpoint']
+
+        Notification(client=client, data={
+            'action': 'contact.dup',
+            'contact_id': contact.contact_id,
+            'contact_key': contact.contact_key,
+            'target': target.number
+        }).save()
+
+        messages.success(self.request, "Contact Cloned")
+
+        return super().form_valid(form)
 
 
 class ContactForm(forms.Form):
@@ -266,11 +261,77 @@ class ContactCreate(LoginRequiredMixin, FormView):
     template_name = "backend/clients/contacts/form.html"
     form_class = ContactForm
 
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        ctx['form_title'] = "Create Contact"
+        ctx['client'] = Client.objects.get(id=self.kwargs['pk'])
+
+        return ctx
+
+    def get_success_url(self):
+        return reverse('show_client', kwargs={'pk': self.kwargs['pk']})
+
     def form_valid(self, form):
 
-        # Sent notification
+        client = Client.objects.get(id=self.kwargs['pk'])
+
+        payload = {
+            'id': 0,
+            'contact_type': 'mitc',
+            'contact_name': 'MitC',
+            'data': [
+                {'type': 'NAME', 'value': form.cleaned_data['display_name']},
+                {'type': 'PHONE', 'value': form.cleaned_data['phone_number']},
+            ]
+        }
+
+        print("payload:" + repr(payload))
+
+        Notification(client=client, data={
+            'action': 'contact.new',
+            'payload': json.dumps(payload)
+        }).save()
+
+        messages.success(self.request, "Create request sent")
 
         return super(ContactCreate, self).form_valid(form)
+
+
+class LinkForm(forms.Form):
+    client = forms.ModelChoiceField(queryset=Client.objects.all())
+
+
+class ContactLink(LoginRequiredMixin, FormView):
+    template_name = "backend/clients/contacts/link.html"
+    form_class = LinkForm
+
+    def get_success_url(self):
+        return reverse('show_client', kwargs={'pk': self.kwargs['pk']})
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        ctx['form_title'] = "Link Contact"
+        ctx['client'] = Client.objects.get(id=self.kwargs['pk'])
+
+        return ctx
+
+    def form_valid(self, form):
+
+        client = Client.objects.get(id=self.kwargs['pk'])
+
+        target = form.cleaned_data['client']
+        payload = RawContactSerializer(target.profile.raw_contacts.first()).data
+
+        print("payload:" + repr(payload))
+
+        Notification(client=client, data={
+            'action': 'contact.new',
+            'payload': payload
+        }).save()
+
+        messages.success(self.request, "Link request sent")
+
+        return super().form_valid(form)
 
 
 class ContactDelete(LoginRequiredMixin, SingleObjectMixin, TemplateResponseMixin, View):
@@ -298,13 +359,13 @@ class ContactDelete(LoginRequiredMixin, SingleObjectMixin, TemplateResponseMixin
 
         contact = self.get_object()
         client = Client.objects.get(id=pk)
-        notif = Notification(client=client)
-        notif.data = {
+
+        Notification(client=client, data={
             'action': 'contact.del',
             'contact_id': contact.contact_id,
             'contact_key': contact.contact_key
-        }
-        notif.save()
+        }).save()
 
-        messages.success(request, "Deletion notification sent!")
+        messages.success(request, "Deletion request sent")
+
         return redirect(to='show_client', pk=pk)

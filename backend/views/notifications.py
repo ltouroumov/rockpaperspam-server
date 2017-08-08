@@ -1,7 +1,7 @@
 from datetime import datetime, timedelta
 
 from django.contrib.auth.mixins import LoginRequiredMixin
-from django.urls import reverse_lazy
+from django.urls import reverse_lazy, reverse
 from django.views.generic import ListView, FormView, CreateView
 
 from api.models import Notification, Client, NotificationTemplate
@@ -46,7 +46,24 @@ class Send(LoginRequiredMixin, CreateView):
     model = Notification
     form_class = NotificationForm
     template_name = "backend/notifications/form.html"
-    success_url = reverse_lazy('notifications')
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        ctx['return_url'] = self.get_success_url()
+        print("ctx " + repr(ctx))
+        return ctx
+
+    def get_success_url(self):
+        ret_loc = self.request.GET.get('return', None)
+        print("ret_loc " + ret_loc)
+        if ret_loc == 'client':
+            ret_url = reverse('show_client', kwargs={'pk': self.request.GET.get('client', None)})
+        else:
+            ret_url = reverse('notifications')
+
+        print("ret_url " + ret_url)
+
+        return ret_url
 
     def get_initial(self):
         init = super().get_initial()

@@ -73,6 +73,8 @@ def sync(request: Request):
     data = request.data
     profile_json = data['profile']
 
+    print("received:" + repr(data))
+
     try:
         client = Client.objects.get(id=data['client_id'])
         profile = client.profile

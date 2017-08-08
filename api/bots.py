@@ -49,7 +49,7 @@ def post_notification_saved(sender, **kwargs):
 
     if notification.template_id:
         template = notification.template
-        
+
         if template.has_notification():
             payload['notification'] = template.payload()
             payload['notification'].update(notification.payload())
